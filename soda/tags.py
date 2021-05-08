@@ -184,9 +184,8 @@ class Fragment(Tag):
 
 
 class Root(Tag):
-    tag_name = "svg"
     def __init__(self, *children: Node, use_namespace: bool = False, **attributes: Value):
-        self(*children, **attributes)
+        super().__init__("svg", *children, **attributes)
         if use_namespace:
             self(**{
                 "version": "2.0",
