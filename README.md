@@ -125,7 +125,7 @@ class CustomComponent(Fragment):
                 Tag.no
             )
         )
-        super().__init__(children)
+        super().__init__(*children)
 
 CustomComponent().render()
 ```
