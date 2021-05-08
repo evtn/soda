@@ -14,6 +14,10 @@ root = Root(viewBox="0 0 10 10")(
 print(root.render(pretty=True))
 ```
 
+## Installation
+
+Just use `python setup.py` or `python -m pip install soda-svg`
+
 ## Tag construction
 
 The main class of the module is `Tag`. You can create it with a constructor:
