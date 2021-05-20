@@ -5,8 +5,9 @@ Node = Union["Tag", str]
 Number = Union[float, int]
 Value = TypeVar('Value')
 
+tab_char: str = "    "
 
-def add_tab(text: str, tab_char: str = "    ") -> str:
+def add_tab(text: str) -> str:
     if text:
         return tab_char + text.replace("\n", "\n" + tab_char)
     return ""
