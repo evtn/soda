@@ -2,32 +2,38 @@ from typing import Union, Any, TypeVar
 
 Node = Union["Tag", str]
 Number = Union[float, int]
-Value = TypeVar('Value')
+Value = TypeVar("Value")
 
 tab_char: str = "    "
+
 
 def add_tab(text: str) -> str:
     if text:
         return tab_char + text.replace("\n", "\n" + tab_char)
     return ""
 
+
 def escape(text: str) -> str:
     return text.replace("&", "&amp;").replace(">", "&gt;").replace("<", "&lt;")
 
+
 def identifier(text: str) -> str:
-    return "".join(
-        filter(
-            lambda x: x == "-" or x.isalnum(), 
-            str(text)
-        )
-    )
+    return "".join(filter(lambda x: x == "-" or x.isalnum(), str(text)))
+
 
 class MetaTag(type):
     def __getattr__(self, attr: str) -> "Tag":
         return Tag(attr)
 
+
 class Tag(metaclass=MetaTag):
-    def __init__(self, tag_name: str, *children: Node, self_closing: bool = True, **attributes: Any):
+    def __init__(
+        self,
+        tag_name: str,
+        *children: Node,
+        self_closing: bool = True,
+        **attributes: Any,
+    ):
         self.tag_name = tag_name
         self.children = list(children)
         self.attributes = attributes
@@ -40,7 +46,7 @@ class Tag(metaclass=MetaTag):
         if self.attributes:
             result = add_tab(
                 "\n".join(
-                    f"{identifier(key)}=\"{value}\""
+                    f'{identifier(key)}="{value}"'
                     for key, value in self.attributes.items()
                 )
             )
@@ -91,7 +97,7 @@ class Tag(metaclass=MetaTag):
             for attr in attributes:
                 self[attr] = attributes[attr]
         return self
-                
+
     def __repr__(self) -> str:
         return f"Tag<{self.tag_name} attributes: {len(self.attributes)}>children: {len(self.children)}</{self.tag_name}>"
 
@@ -112,7 +118,7 @@ class Tag(metaclass=MetaTag):
             yield " "
 
         for key in self.attributes:
-            yield f"{key}=\"{self.attributes[key]}\" "
+            yield f'{key}="{self.attributes[key]}" '
 
         if self.children or not self.self_closing:
             yield ">"
@@ -133,7 +139,7 @@ class Tag(metaclass=MetaTag):
         attributes = self.render_attributes()
         tag_name = identifier(self.tag_name)
         open_tag = f"<{tag_name}"
-        
+
         if children:
             children = "\n".join([">", children, ""])
             close_tag = f"</{tag_name}>"
@@ -141,12 +147,13 @@ class Tag(metaclass=MetaTag):
             close_tag = f"></{tag_name}>"
         else:
             close_tag = f"/>"
-        
+
         return f"{open_tag}{attributes}{children}{close_tag}"
 
     def prerender(self, pretty: bool = False) -> "Literal":
         """Renders a tag into a non-escaping literal. Could be useful for heavy tags."""
         return Literal(self.render(pretty), escape=False)
+
 
 class Literal:
     def __init__(self, text: str, escape: bool = True):
@@ -170,12 +177,13 @@ class Literal:
 
 class Fragment(Tag):
     """React-like fragment, renders just its children"""
+
     def __init__(self, *children: Node):
         super().__init__("soda:fragment", *children)
 
     def build(self):
         return "".join(self.build_child(child) for child in self.children)
-    
+
     def render(self, pretty: bool = False) -> str:
         result = [self.build_child(child) for child in self.children]
         if pretty:
@@ -184,11 +192,15 @@ class Fragment(Tag):
 
 
 class Root(Tag):
-    def __init__(self, *children: Node, use_namespace: bool = False, **attributes: Value):
+    def __init__(
+        self, *children: Node, use_namespace: bool = False, **attributes: Value
+    ):
         super().__init__("svg", *children, **attributes)
         if use_namespace:
-            self(**{
-                "version": "2.0",
-                "xmlns": "http://www.w3.org/2000/svg",
-                "xmlns:xlink": "http://www.w3.org/1999/xlink"
-            })
+            self(
+                **{
+                    "version": "2.0",
+                    "xmlns": "http://www.w3.org/2000/svg",
+                    "xmlns:xlink": "http://www.w3.org/1999/xlink",
+                }
+            )
