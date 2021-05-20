@@ -1,5 +1,4 @@
-from typing import List, Union, Any, TypeVar, Dict
-from itertools import chain
+from typing import Union, Any, TypeVar
 
 Node = Union["Tag", str]
 Number = Union[float, int]
