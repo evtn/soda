@@ -41,6 +41,9 @@ or as call arguments (this would change tag in place, no additional copies):
 Tag("g")(child1, attr1=1)(child2, child3, attr2=10, attr3=3)
 # or
 Tag.g(child1, attr1=1)(child2, child3, attr2=10, attr3=3)
+
+# '_' to '-' conversion
+Tag.g(child1, attr_1=1)(child2, child3, attr_2=10, attr_3=3) # <g attr-1="1" attr-2="10" attr-3="3" >child1child2child3</g>
 ```
 
 ## Accessing data

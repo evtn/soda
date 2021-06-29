@@ -23,7 +23,7 @@ def identifier(text: str) -> str:
 
 class MetaTag(type):
     def __getattr__(self, attr: str) -> "Tag":
-        return Tag(attr)
+        return Tag(attr.replace("_", "-"))
 
 
 class Tag(metaclass=MetaTag):
@@ -36,7 +36,7 @@ class Tag(metaclass=MetaTag):
     ):
         self.tag_name = tag_name
         self.children = list(children)
-        self.attributes = attributes
+        self.attributes = {k.replace("_", "-"): v for k, v in attributes.items()}
         self.self_closing = self_closing
 
     def copy(self) -> "Tag":
@@ -68,16 +68,17 @@ class Tag(metaclass=MetaTag):
 
     def set_attribute(self, attr: str, value: Value) -> Value:
         """sets tag attribute to value. If None is passed, deletes attribute"""
+        attr = attr.replace("_", "-")
         if value is None:
             if attr in self.attributes:
                 self.attributes.pop(attr)
             return None
-        self.attributes[str(attr)] = value
+        self.attributes[attr] = value
         return value
 
     def get_attribute(self, attr: str) -> Value:
         """returns tag attribute or None"""
-        return self.attributes.get(str(attr))
+        return self.attributes.get(attr.replace("_", "-"))
 
     def __setitem__(self, item: Union[str, int, slice], value: Value) -> Value:
         if isinstance(item, (int, slice)):

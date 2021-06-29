@@ -7,7 +7,7 @@ Information about the current version of soda package.
 
 __title__ = 'soda-svg'
 __description__ = 'Fast SVG generation tool'
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 __author__ = 'evtn'
 __author_email__ = 'g@evtn.ru'
 __license__ = 'MIT License'
