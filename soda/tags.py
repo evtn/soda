@@ -18,7 +18,7 @@ def escape(text: str) -> str:
 
 
 def identifier(text: str) -> str:
-    return "".join(filter(lambda x: x == "-" or x.isalnum(), str(text)))
+    return "".join(filter(lambda x: x in ["-", ":"] or x.isalnum(), str(text)))
 
 
 class MetaTag(type):
