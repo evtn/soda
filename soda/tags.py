@@ -1,8 +1,8 @@
-from typing import Union, Any, TypeVar
+from typing import Dict, Generator, List, Optional, Union, Any, overload
 
 Node = Union["Tag", str]
 Number = Union[float, int]
-Value = TypeVar("Value")
+Value = Union[str, Number]
 
 tab_char: str = "    "
 
@@ -27,6 +27,11 @@ class MetaTag(type):
 
 
 class Tag(metaclass=MetaTag):
+    tag_name: str
+    children: List[Node]
+    attributes: Dict[str, Any]
+    self_closing: bool
+
     def __init__(
         self,
         tag_name: str,
@@ -54,7 +59,7 @@ class Tag(metaclass=MetaTag):
         return ""
 
     @staticmethod
-    def render_node(node) -> str:
+    def render_node(node: Node) -> str:
         if isinstance(node, str):
             return escape(node)
         return node.render(True)
@@ -66,32 +71,66 @@ class Tag(metaclass=MetaTag):
                 return add_tab(result)
         return ""
 
+    @overload
+    def set_attribute(self, attr: str, value: None) -> None:
+        ...
+
+    @overload
     def set_attribute(self, attr: str, value: Value) -> Value:
+        ...
+
+    def set_attribute(self, attr: str, value: Optional[Value]) -> Optional[Value]:
         """sets tag attribute to value. If None is passed, deletes attribute"""
         attr = attr.replace("_", "-")
         if value is None:
             if attr in self.attributes:
                 self.attributes.pop(attr)
-            return None
-        self.attributes[attr] = value
+        else:
+            self.attributes[attr] = value
         return value
 
-    def get_attribute(self, attr: str) -> Value:
+    def get_attribute(self, attr: str) -> Optional[Value]:
         """returns tag attribute or None"""
         return self.attributes.get(attr.replace("_", "-"))
 
-    def __setitem__(self, item: Union[str, int, slice], value: Value) -> Value:
+    @overload
+    def __setitem__(self, item: int, value: Node) -> Node:
+        ...
+
+    @overload
+    def __setitem__(self, item: slice, value: List[Node]) -> List[Node]:
+        ...
+
+    @overload
+    def __setitem__(self, item: str, value: Optional[Value]) -> Optional[Value]:
+        ...
+
+    def __setitem__(self, item, value) -> Union[Node, List[Node], Optional[Value]]:
         if isinstance(item, (int, slice)):
             self.children[item] = value
             return value
         return self.set_attribute(item, value)
 
-    def __getitem__(self, item: Union[str, int, slice]) -> Value:
+    @overload
+    def __getitem__(self, item: int) -> Node:
+        ...
+
+    @overload
+    def __getitem__(self, item: slice) -> List[Node]:
+        ...
+
+    @overload
+    def __getitem__(self, item: str) -> Value:
+        ...
+
+    def __getitem__(
+        self, item: Union[str, int, slice]
+    ) -> Optional[Union[Node, List[Node], Value]]:
         if isinstance(item, (int, slice)):
             return self.children[item]
         return self.get_attribute(item)
 
-    def __call__(self, *children: Value, **attributes: Any) -> "Tag":
+    def __call__(self, *children: Node, **attributes: Any) -> "Tag":
         if children:
             self.children.extend(children)
         if attributes:
@@ -105,14 +144,13 @@ class Tag(metaclass=MetaTag):
     def __str__(self) -> str:
         return self.render()
 
-    def build_child(self, child):
+    def build_child(self, child: Node) -> str:
         if isinstance(child, str):
             return escape(child)
         return "".join(child.build())
 
-    def build(self):
+    def build(self) -> Generator[str, None, None]:
         tag_name = identifier(self.tag_name)
-        attr_space = " " * bool(self.attributes)
         yield f"<{tag_name}"
 
         if self.attributes:
@@ -166,7 +204,7 @@ class Literal:
     def copy(self) -> "Literal":
         return Literal(self.children[0], self.escape)
 
-    def render(self, pretty: bool = False):
+    def render(self, pretty: bool = False) -> str:
         children = self.render_children()
         if self.escape:
             return escape(children)
@@ -181,9 +219,6 @@ class Fragment(Tag):
 
     def __init__(self, *children: Node):
         super().__init__("soda:fragment", *children)
-
-    def build(self):
-        return "".join(self.build_child(child) for child in self.children)
 
     def render(self, pretty: bool = False) -> str:
         result = [self.build_child(child) for child in self.children]
