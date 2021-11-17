@@ -97,9 +97,9 @@ You can build custom components, using different approaches:
 The most straightforward one, builds a tree on every render:
 
 ```python
-from soda import Tag, Fragment
+from soda import Tag
 
-class CustomComponent(Fragment):
+class CustomComponent(Tag):
     def render(self, pretty: bool = False) -> str:
         return Tag.g(
             Tag.anythingother,
