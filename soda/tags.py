@@ -1,10 +1,21 @@
-from typing import Dict, Generator, List, Optional, Union, Any, overload
+from typing import Dict, Generator, List, Optional, TypedDict, Union, Any, overload
 
 Node = Union["Tag", str]
 Number = Union[float, int]
 Value = Union[str, Number]
 
 tab_char: str = "    "
+
+
+class TagTree(TypedDict):
+    tag_name: str
+    children: List[Union["TagTree", str]]
+    attributes: Dict[str, Any]
+    self_closing: bool
+
+
+def str_to_tree(node: str) -> TagTree:
+    return TagTree(tag_name="#literal", children=[node], attributes={}, self_closing=True)
 
 
 def add_tab(text: str) -> str:
@@ -29,7 +40,7 @@ class MetaTag(type):
 class Tag(metaclass=MetaTag):
     tag_name: str
     children: List[Node]
-    attributes: Dict[str, Any]
+    attributes: Dict[str, Value]
     self_closing: bool
 
     def __init__(
@@ -37,7 +48,7 @@ class Tag(metaclass=MetaTag):
         tag_name: str,
         *children: Node,
         self_closing: bool = True,
-        **attributes: Any,
+        **attributes: Value,
     ):
         self.tag_name = tag_name
         self.children = list(children)
@@ -45,7 +56,7 @@ class Tag(metaclass=MetaTag):
         self.self_closing = self_closing
 
     def copy(self) -> "Tag":
-        return Tag(self.tag_name, *self.children, **self.attributes)
+        return Tag(self.tag_name, *self.children, self_closing=self.self_closing, **self.attributes)
 
     def render_attributes(self):
         if self.attributes:
@@ -193,12 +204,37 @@ class Tag(metaclass=MetaTag):
         """Renders a tag into a non-escaping literal. Could be useful for heavy tags."""
         return Literal(self.render(pretty), escape=False)
 
+    def to_tree(self) -> TagTree:
+        return TagTree(
+            tag_name=self.tag_name,
+            children=[node.to_tree() if isinstance(node, Tag) else str_to_tree(node) for node in self.children],
+            attributes=self.attributes.copy(),
+            self_closing=self.self_closing
+        )
+
+    def to_dict(self) -> TagTree:
+        return self.to_tree()
+
+    @staticmethod
+    def from_tree(tree: TagTree):
+        if tree["tag_name"] == "#literal":
+            return Literal(str(tree["children"][0]))
+        elif tree["tag_name"] == "#fragment":
+            return Fragment(*tree["children"])
+        else:
+            return Tag(
+                tree["tag_name"],
+                *tree["children"],
+                **tree["attributes"],
+                self_closing=tree["self_closing"]
+            )
+
 
 class Literal:
     def __init__(self, text: str, escape: bool = True):
         self.tag_name = ""
         self.children = [text]
-        self.attributes = {}
+        self.attributes: Dict[str, Value] = {}
         self.escape = escape
 
     def copy(self) -> "Literal":
@@ -213,6 +249,14 @@ class Literal:
     def render_children(self):
         return "".join(map(str, self.children))
 
+    def to_tree(self) -> TagTree:
+        return TagTree(
+            tag_name="#literal", 
+            children=self.children[:], 
+            attributes={}, 
+            self_closing=True
+        )
+
 
 class Fragment(Tag):
     """React-like fragment, renders just its children"""
@@ -226,12 +270,20 @@ class Fragment(Tag):
             return "\n".join(result)
         return "".join(result)
 
+    def to_tree(self) -> TagTree:
+        return TagTree(
+            tag_name="#literal", 
+            children=self.children[:], 
+            attributes={}, 
+            self_closing=True
+        )
+
 
 class Root(Tag):
     def __init__(
         self, *children: Node, use_namespace: bool = False, **attributes: Value
     ):
-        super().__init__("svg", *children, **attributes)
+        super().__init__("svg", *children, self_closing=False, **attributes)
         if use_namespace:
             self(
                 **{
