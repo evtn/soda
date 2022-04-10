@@ -14,6 +14,12 @@ class TagTree(TypedDict):
     self_closing: bool
 
 
+def node_to_tree(node: Node):
+    if isinstance(node, str):
+        return str_to_tree(node)
+    return node.to_tree()
+
+
 def str_to_tree(node: str) -> TagTree:
     return TagTree(tag_name="#literal", children=[node], attributes={}, self_closing=True)
 
@@ -155,35 +161,53 @@ class Tag(metaclass=MetaTag):
     def __str__(self) -> str:
         return self.render()
 
-    def build_child(self, child: Node) -> str:
+    def build_child(self, child: Node, tab_size: int = 0, tab_level: int = 0) -> str:
         if isinstance(child, str):
-            return escape(child)
-        return "".join(child.build())
+            yield " " * (tab_size * tab_level)
+            yield escape(child)
+        else:
+            yield from child.build(tab_size, tab_level)
 
-    def build(self) -> Generator[str, None, None]:
+    def build(self, tab_size: int = 0, tab_level: int = 0) -> Generator[str, None, None]:
         tag_name = identifier(self.tag_name)
+        pretty = bool(tab_size)
+
+        tab = " " * tab_size
+        tag_indent = " " * (tab_size * tab_level)
+        separator = "\n" * pretty
+        attr_space = "\n" if pretty else " "
+
+        attr_separator = [attr_space, tag_indent, tab]
+
+
+        if tab_size:
+            yield tag_indent
+
         yield f"<{tag_name}"
 
-        if self.attributes:
-            yield " "
-
         for key in self.attributes:
-            yield f'{key}="{self.attributes[key]}" '
-
+            yield from attr_separator
+            yield f'{key}="{self.attributes[key]}"'
+        
         if self.children or not self.self_closing:
+            yield separator
+            yield tag_indent
             yield ">"
 
         for child in self.children:
-            yield self.build_child(child)
+            yield separator
+            yield from self.build_child(child, tab_size, tab_level + 1)
+
+        yield separator
+        yield tag_indent
 
         if self.children or not self.self_closing:
             yield f"</{tag_name}>"
         else:
             yield "/>"
 
-    def render(self, pretty: bool = False) -> str:
-        if not pretty:
-            return "".join(self.build())
+    def render(self, pretty: bool = False, tab_size: int = 2) -> str:
+        return "".join(self.build(tab_size * pretty))
 
         children = self.render_children()
         attributes = self.render_attributes()
@@ -207,7 +231,7 @@ class Tag(metaclass=MetaTag):
     def to_tree(self) -> TagTree:
         return TagTree(
             tag_name=self.tag_name,
-            children=[node.to_tree() if isinstance(node, Tag) else str_to_tree(node) for node in self.children],
+            children=list(map(node_to_tree, self.children)),
             attributes=self.attributes.copy(),
             self_closing=self.self_closing
         )
@@ -218,16 +242,20 @@ class Tag(metaclass=MetaTag):
     @staticmethod
     def from_tree(tree: TagTree):
         if tree["tag_name"] == "#literal":
-            return Literal(str(tree["children"][0]))
+            return Literal(str(tree["children"][0] if tree["children"] else ""))
         elif tree["tag_name"] == "#fragment":
-            return Fragment(*tree["children"])
+            return Fragment(*map(Tag.from_tree, tree["children"]))
         else:
             return Tag(
                 tree["tag_name"],
-                *tree["children"],
-                **tree["attributes"],
-                self_closing=tree["self_closing"]
+                *map(Tag.from_tree, tree.get("children", "")),
+                **tree.get("attributes", {}),
+                self_closing=tree.get("self_closing", True)
             )
+
+    @staticmethod
+    def render_tree(tree: TagTree, pretty=False):
+        return Tag.from_tree(tree).render(pretty)
 
 
 class Literal:
@@ -252,7 +280,7 @@ class Literal:
     def to_tree(self) -> TagTree:
         return TagTree(
             tag_name="#literal", 
-            children=self.children[:], 
+            children=list(map(node_to_tree, self.children)), 
             attributes={}, 
             self_closing=True
         )
@@ -264,16 +292,17 @@ class Fragment(Tag):
     def __init__(self, *children: Node):
         super().__init__("soda:fragment", *children)
 
+    def build(self, *args):
+        for child in self.children:
+            yield from self.build_child(child, *args)
+
     def render(self, pretty: bool = False) -> str:
-        result = [self.build_child(child) for child in self.children]
-        if pretty:
-            return "\n".join(result)
-        return "".join(result)
+        raise TypeError("Can't render fragment as a root Tag")
 
     def to_tree(self) -> TagTree:
         return TagTree(
-            tag_name="#literal", 
-            children=self.children[:], 
+            tag_name="#fragment", 
+            children=list(map(node_to_tree, self.children)), 
             attributes={}, 
             self_closing=True
         )
