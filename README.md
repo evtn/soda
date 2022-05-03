@@ -92,26 +92,6 @@ print(tag) # <g><a/><a/></g>
 
 You can build custom components, using different approaches:
 
-### Custom render
-
-The most straightforward one, builds a tree on every render:
-
-```python
-from soda import Tag
-
-class CustomComponent(Tag):
-    def render(self, pretty: bool = False) -> str:
-        return Tag.g(
-            Tag.anythingother,
-            Tag.lalala(
-                Tag.yes,
-                Tag.no
-            )
-        ).render(pretty)
-
-CustomComponent().render()
-```
-
 ### Building a tree on init
 
 Builds a tree on every component creation
