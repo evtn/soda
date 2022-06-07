@@ -88,6 +88,131 @@ print(tag) # <g><a/><a/></g>
 
 ```
 
+## Paths
+
+*new in 0.1.7*
+
+There is a builder for SVG path commands in soda:
+
+
+<svg viewBox="0 0 100 100">
+    <rect width="100%" height="100%" fill="white"/>
+    <path d="M 10,30
+           A 20,20 0,0,1 50,30
+           A 20,20 0,0,1 90,30
+           Q 90,60 50,90
+           Q 10,60 10,30 z"
+    />
+</svg>
+
+You can build a list of path commands using descriptive command names:    
+
+```python
+from soda import Tag, Root, Path
+
+commands = (
+    Path.moveto(x=10, y=30),
+    Path.arc(
+        radius_x=20, 
+        radius_y=20, 
+        # for convenience, omitted arguments 
+        # (here: x_axis_rotation and large_arc_flag) are set to 0 
+        sweep_flag=1,
+        x=50,
+        y=30,
+    ),
+    Path.arc(
+        radius_x=20, 
+        radius_y=20, 
+        sweep_flag=1,
+        x=90,
+        y=30,
+    ),
+    Path.quadratic(
+        x1=90,
+        y1=60,
+        x=50,
+        y=90,
+    ),
+    Path.quadratic(
+        x1=10,
+        y1=60,
+        x=10,
+        y=30,
+    ),
+    Path.close()
+)
+
+
+```
+
+...or using common SVG command names:
+
+```python
+
+# or 
+
+commands = (
+    Path.M(10, 30),
+    Path.A(20, 20, 0, 0, 1, 50, 30),
+    Path.A(20, 20, 0, 0, 1, 50, 30),
+    Path.Q(90, 60, 50, 90),
+    Path.Q(10, 60, 10, 30),
+    Path.Z()
+)
+
+```
+
+...and render it with `Path.build(*commands, sep=", ", compact=False)` method
+
+
+```python
+
+root = Root(
+    viewBox="0 0 100 100",
+    use_namespace=True,
+)(
+    Tag.rect(width="100%", height="100%", fill="white"),
+    Tag.path()(
+        d=Path.build(*commands)
+    )
+)
+
+print(root.render(pretty=True))
+
+"""
+yields:
+
+<svg
+  viewBox="0 0 100 100"
+  version="2.0"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+>
+  <rect
+    width="100%"
+    height="100%"
+    fill="white"
+  />
+  <path
+    d="M 10 30, A 20 20 0 0 1 50 30, A 20 20 0 0 1 50 30, Q 90 60 50 90, Q 10 60 10 30, Z"
+  />
+</svg>
+"""
+```
+
+
+You can also replace command separator (`sep` argument to build), or optimize resulting path with `compact` argument (overrides `sep`):
+
+```python
+print(Path.build(*commands, sep=" "))
+# prints 'M 10 30 A 20 20 0 0 1 50 30 A 20 20 0 0 1 90 30 Q 90 60 50 90 Q 10 60 10 30 Z'
+
+print(Path.build(*commands, compact=True))
+# prints M10 30A20 20 0 0 1 50 30A20 20 0 0 1 50 30Q90 60 50 90Q10 60 10 30Z
+```
+
+
 ## Custom components
 
 You can build custom components, using different approaches:
@@ -131,6 +256,7 @@ def custom_component():
 
 custom_component().render()
 ```
+
 
 ## Speed
 
