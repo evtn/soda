@@ -48,6 +48,8 @@ class Tag(metaclass=MetaTag):
     children: List[Node]
     attributes: Dict[str, Value]
     self_closing: bool
+    brackets: List[str] = ["<", "</", ">", "/>"]
+    key_value_sep: str = "="
 
     def __init__(
         self,
@@ -159,17 +161,20 @@ class Tag(metaclass=MetaTag):
         if tab_size:
             yield tag_indent
 
-        yield f"<{tag_name}"
+        yield self.brackets[0]
+        yield tag_name
 
         for key in self.attributes:
             yield from attr_separator
-            yield f'{key}="{self.attributes[key]}"'
+            yield str(key)
+            yield self.key_value_sep
+            yield str(self.attributes[key])
         
         if self.children or not self.self_closing:
             if self.attributes:
                 yield separator
                 yield tag_indent
-            yield ">"
+            yield self.brackets[2]
 
         for child in self.children:
             yield separator
@@ -179,9 +184,11 @@ class Tag(metaclass=MetaTag):
         yield tag_indent
 
         if self.children or not self.self_closing:
-            yield f"</{tag_name}>"
+            yield self.brackets[1]
+            yield tag_name
+            yield self.brackets[2]
         else:
-            yield "/>"
+            yield self.brackets[3]
 
     def render(self, pretty: bool = False, tab_size: int = 2) -> str:
         return "".join(self.build(tab_size * pretty))
@@ -286,3 +293,10 @@ class Root(Tag):
                     "xmlns:xlink": "http://www.w3.org/1999/xlink",
                 }
             )
+
+
+class XMLDeclaration(Tag):
+    brackets = ["<?", "<?", "?>", "?>"]
+
+    def __init__(self, version: str = "1.0", encoding: str = "UTF-8"):
+        super().__init__("xml", **{"version": version, "encoding": encoding})
