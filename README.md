@@ -193,7 +193,7 @@ commands = (
 
 ```
 
-...and render it with `Path.build(*commands, sep=", ", compact=False)` method
+...and render it with `Path.build(*commands, compact=False)` method
 
 ```python
 
