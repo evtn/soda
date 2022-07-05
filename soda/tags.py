@@ -190,8 +190,9 @@ class Tag(metaclass=MetaTag):
             yield f'{key}="{self.attributes[key]}"'
         
         if self.children or not self.self_closing:
-            yield separator
-            yield tag_indent
+            if self.attributes:
+                yield separator
+                yield tag_indent
             yield ">"
 
         for child in self.children:

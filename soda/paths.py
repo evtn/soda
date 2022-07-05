@@ -1,13 +1,9 @@
-from .tags import Tag, Value
-from typing import overload
-
-
 class Path:
     @staticmethod
-    def build(*commands: str, sep: str = ", ", compact=False) -> str:
+    def build(*commands: str, compact=False) -> str:
         if compact:
             return compact_path(" ".join(commands).split(" "))
-        return sep.join(commands)
+        return " ".join(commands)
 
     # M x y
     @staticmethod
@@ -73,7 +69,7 @@ class Path:
 
     # T x y
     @staticmethod
-    def q_shorthand(x1: int = 0, y1: int = 0, x: int = 0, y: int = 0, *, relative: bool = False):
+    def q_shorthand(x: int = 0, y: int = 0, *, relative: bool = False):
         prefix = "Tt"[relative]
         return " ".join(map(str, [prefix, x, y]))
 
@@ -120,7 +116,6 @@ def compact_path(path):
             continue
 
         is_dot = part[0] == "."
-        is_digit = part[0] in digits
 
         if is_dot:
             if "." not in result[-1]:

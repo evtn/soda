@@ -176,7 +176,7 @@ commands = (
 
 ```
 
-...or using common SVG command names:
+...or using common SVG command names (letter case signifies if command is relative):
 
 ```python
 
@@ -224,18 +224,15 @@ yields:
     fill="white"
   />
   <path
-    d="M 10 30, A 20 20 0 0 1 50 30, A 20 20 0 0 1 50 30, Q 90 60 50 90, Q 10 60 10 30, Z"
+    d="M 10 30 A 20 20 0 0 1 50 30 A 20 20 0 0 1 50 30 Q 90 60 50 90 Q 10 60 10 30 Z"
   />
 </svg>
 """
 ```
 
-You can also replace command separator (`sep` argument to build), or optimize resulting path with `compact` argument (overrides `sep`):
+You can also optimize resulting path with `compact` argument:
 
 ```python
-print(Path.build(*commands, sep=" "))
-# prints 'M 10 30 A 20 20 0 0 1 50 30 A 20 20 0 0 1 90 30 Q 90 60 50 90 Q 10 60 10 30 Z'
-
 print(Path.build(*commands, compact=True))
 # prints M10 30A20 20 0 0 1 50 30A20 20 0 0 1 50 30Q90 60 50 90Q10 60 10 30Z
 ```
