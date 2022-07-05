@@ -21,10 +21,13 @@ Just use `python setup.py` or `python -m pip install soda-svg`
 ## Tag construction
 
 The main class of the module is `Tag`. You can create it with a constructor:
+
 ```python
 Tag("g")
 ```
+
 or with a shorthand:
+
 ```python
 Tag.g
 ```
@@ -46,7 +49,36 @@ Tag.g(child1, attr1=1)(child2, child3, attr2=10, attr3=3)
 Tag.g(child1, attr_1=1)(child2, child3, attr_2=10, attr_3=3) # <g attr-1="1" attr-2="10" attr-3="3" >child1child2child3</g>
 ```
 
+### Text
+
+Basic text handling is pretty straightforward:
+
+```python
+from soda import Tag
+
+Tag.text("Hello, World") # just pass a string as a children
+```
+
+This code is roughly equivalent to:
+
+```python
+from soda import Tag, Literal
+
+Tag.text(Literal("Hello, World"))
+```
+
+...except that first piece doesn't create a `Literal` object.
+
+If you need to add unescaped text (such as prerendered XML), you should pass `escape=False` to a `Literal` constructor:
+
+```python
+from soda import Tag, Literal
+
+Tag.g(Literal('<path d="M0 0 L10 0 Z"/>', escape=False))
+```
+
 ## Accessing data
+
 `tag[attr]` syntax can be used to manage tag attributes (where `attr` should be a string).
 Also, you can just edit `tag.attributes` directly (which is a bad idea, actually, don't do that)
 
@@ -66,13 +98,12 @@ print(tag["non-existent-attribute"]) # prints None
 from soda import Tag
 
 tag = Tag.g(Tag.a)
-tag[0]["href"] = "https://github.com/evtn/soda" 
+tag[0]["href"] = "https://github.com/evtn/soda"
 print(tag[1]) # IndexError
 print(tag[0]) # prints <a href="https://github.com/evtn/soda" />
 ```
 
-Children can also be accessed directly through `tag.children` attribute. 
-
+Children can also be accessed directly through `tag.children` attribute.
 
 ## Fragments
 
@@ -90,10 +121,9 @@ print(tag) # <g><a/><a/></g>
 
 ## Paths
 
-*new in 0.1.7*
+_new in 0.1.7_
 
 There is a builder for SVG path commands in soda:
-
 
 <svg viewBox="0 0 100 100">
     <rect width="100%" height="100%" fill="white"/>
@@ -105,7 +135,7 @@ There is a builder for SVG path commands in soda:
     />
 </svg>
 
-You can build a list of path commands using descriptive command names:    
+You can build a list of path commands using descriptive command names:
 
 ```python
 from soda import Tag, Root, Path
@@ -113,17 +143,17 @@ from soda import Tag, Root, Path
 commands = (
     Path.moveto(x=10, y=30),
     Path.arc(
-        radius_x=20, 
-        radius_y=20, 
-        # for convenience, omitted arguments 
-        # (here: x_axis_rotation and large_arc_flag) are set to 0 
+        radius_x=20,
+        radius_y=20,
+        # for convenience, omitted arguments
+        # (here: x_axis_rotation and large_arc_flag) are set to 0
         sweep_flag=1,
         x=50,
         y=30,
     ),
     Path.arc(
-        radius_x=20, 
-        radius_y=20, 
+        radius_x=20,
+        radius_y=20,
         sweep_flag=1,
         x=90,
         y=30,
@@ -150,7 +180,7 @@ commands = (
 
 ```python
 
-# or 
+# or
 
 commands = (
     Path.M(10, 30),
@@ -164,7 +194,6 @@ commands = (
 ```
 
 ...and render it with `Path.build(*commands, sep=", ", compact=False)` method
-
 
 ```python
 
@@ -201,7 +230,6 @@ yields:
 """
 ```
 
-
 You can also replace command separator (`sep` argument to build), or optimize resulting path with `compact` argument (overrides `sep`):
 
 ```python
@@ -211,7 +239,6 @@ print(Path.build(*commands, sep=" "))
 print(Path.build(*commands, compact=True))
 # prints M10 30A20 20 0 0 1 50 30A20 20 0 0 1 50 30Q90 60 50 90Q10 60 10 30Z
 ```
-
 
 ## Custom components
 
@@ -257,7 +284,6 @@ def custom_component():
 custom_component().render()
 ```
 
-
 ## Speed
 
 soda is able to render tens of thousands tags per second, but if you wanna optimize your execution, there are some tips:
@@ -273,6 +299,6 @@ This could speed up your render significantly in some cases.
 
 ### Pretty or not?
 
-Pretty render gives a nice formatted output, which is very readable.    
-~~But using `pretty=True` in rendering would make renders 3-5x slower than default `pretty=False`.~~    
+Pretty render gives a nice formatted output, which is very readable.  
+~~But using `pretty=True` in rendering would make renders 3-5x slower than default `pretty=False`.~~  
 Starting with 0.1.5 version, pretty rendering is roughly the same in speed as default one.
