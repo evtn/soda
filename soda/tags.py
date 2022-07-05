@@ -258,8 +258,9 @@ class Fragment(Tag):
         for child in self.children:
             yield from self.build_child(child, *args)
 
-    def render(self, pretty: bool = False) -> str:
-        raise TypeError("Can't render fragment as a root Tag")
+    def render(self, pretty: bool = False, tab_size: int = 2) -> str:
+        sep = "\n" * pretty
+        return sep.join(self.build(tab_size * pretty))
 
     def to_tree(self) -> TagTree:
         return TagTree(
@@ -269,6 +270,8 @@ class Fragment(Tag):
             self_closing=True
         )
 
+    def copy(self) -> "Fragment":
+        return Fragment(*self.children)
 
 class Root(Tag):
     def __init__(
