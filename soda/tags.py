@@ -64,30 +64,6 @@ class Tag(metaclass=MetaTag):
     def copy(self) -> "Tag":
         return Tag(self.tag_name, *self.children, self_closing=self.self_closing, **self.attributes)
 
-    def render_attributes(self):
-        if self.attributes:
-            result = add_tab(
-                "\n".join(
-                    f'{identifier(key)}="{value}"'
-                    for key, value in self.attributes.items()
-                )
-            )
-            return f"\n{result}\n"
-        return ""
-
-    @staticmethod
-    def render_node(node: Node) -> str:
-        if isinstance(node, str):
-            return escape(node)
-        return node.render(True)
-
-    def render_children(self) -> str:
-        if self.children:
-            result = "\n".join(self.render_node(child) for child in self.children)
-            if result:
-                return add_tab(result)
-        return ""
-
     @overload
     def set_attribute(self, attr: str, value: None) -> None:
         ...
@@ -209,21 +185,6 @@ class Tag(metaclass=MetaTag):
 
     def render(self, pretty: bool = False, tab_size: int = 2) -> str:
         return "".join(self.build(tab_size * pretty))
-
-        children = self.render_children()
-        attributes = self.render_attributes()
-        tag_name = identifier(self.tag_name)
-        open_tag = f"<{tag_name}"
-
-        if children:
-            children = "\n".join([">", children, ""])
-            close_tag = f"</{tag_name}>"
-        elif not self.self_closing:
-            close_tag = f"></{tag_name}>"
-        else:
-            close_tag = f"/>"
-
-        return f"{open_tag}{attributes}{children}{close_tag}"
 
     def prerender(self, pretty: bool = False) -> "Literal":
         """Renders a tag into a non-escaping literal. Could be useful for heavy tags."""
