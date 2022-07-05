@@ -168,7 +168,9 @@ class Tag(metaclass=MetaTag):
             yield from attr_separator
             yield str(key)
             yield self.key_value_sep
-            yield str(self.attributes[key])
+            yield '"'
+            yield str(self.attributes[key]).replace('"', '&quot;')
+            yield '"'
         
         if self.children or not self.self_closing:
             if self.attributes:
