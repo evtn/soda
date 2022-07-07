@@ -244,16 +244,9 @@ class Literal(Tag):
 
         for child in self.children:
             yield separator
-            yield from self.build_child(child, tab_size, tab_level + 1)
-
-    def render(self, pretty: bool = False) -> str:
-        children = self.render_children()
-        if self.escape:
-            return escape(children)
-        return children
-
-    def render_children(self):
-        return "".join(map(str, self.children))
+            if self.escape:
+                yield escape(str(child))
+            yield str(child)
 
     def to_tree(self) -> TagTree:
         return TagTree(
