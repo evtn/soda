@@ -229,7 +229,7 @@ class Tag(metaclass=MetaTag):
         return Tag.from_tree(tree).render(pretty)
 
 
-class Literal:
+class Literal(Tag):
     def __init__(self, text: str, escape: bool = True):
         self.tag_name = ""
         self.children = [text]
@@ -238,6 +238,13 @@ class Literal:
 
     def copy(self) -> "Literal":
         return Literal(self.children[0], self.escape)
+
+    def build(self, tab_size: int = 0, tab_level: int = 0) -> Generator[str, None, None]:
+        separator = "\n" * bool(tab_size)
+
+        for child in self.children:
+            yield separator
+            yield from self.build_child(child, tab_size, tab_level + 1)
 
     def render(self, pretty: bool = False) -> str:
         children = self.render_children()
