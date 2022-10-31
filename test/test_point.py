@@ -35,7 +35,7 @@ class TestClass:
         
         assert abs(
             sum(
-                a.rotate(degrees=90).rotate(degrees=-90)
+                a.rotate(degrees=90).rotate(degrees=-90) - a
             )
         ) < 1e-10
 
