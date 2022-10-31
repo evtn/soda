@@ -5,7 +5,7 @@ from soda.tags import Literal, Tag
 
 
 def xml_to_tag(xml: str) -> Tag:
-    return element_to_tag(etree.fromstring(xml))
+    return element_to_tag(etree.fromstring(xml))(xmlns="http://www.w3.org/2000/svg")
 
 
 def str_to_tag(text: str | None) -> Literal | None:
@@ -29,7 +29,7 @@ def process_children(element: etree.Element) -> Iterable[Tag]:
 
 
 def element_to_tag(element: etree.Element) -> Tag:
-    tag_name = element.tag
+    tag_name = element.tag.split("}")[-1]
     attributes = element.attrib
 
     return Tag(tag_name)(
