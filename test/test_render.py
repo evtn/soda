@@ -13,6 +13,8 @@ class TestClass:
     def test_attributes(self):
         assert Tag.g(x="1", y="2").render() == '<g x="1" y="2"/>'
         assert Tag.g(x=1, y=2).render() == '<g x="1" y="2"/>'
+        assert Tag.g(qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM=1).render() == '<g qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM="1"/>'
+        assert Tag.g(aააააა=1).render() == '<g a="1"/>'
 
     def test_escape(self):
         assert Tag.g("&").render() == "<g>&amp;</g>"
