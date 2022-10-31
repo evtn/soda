@@ -1,54 +1,24 @@
-from typing import Dict, Generator, List, Optional, TypedDict, Union, Any, overload
-
-Node = Union["Tag", str]
-Number = Union[float, int]
-Value = Union[str, Number]
-
-tab_char: str = "    "
+from __future__ import annotations
+from typing import Iterable, Optional, Type, Union, cast, overload
 
 
-class TagTree(TypedDict):
-    tag_name: str
-    children: List[Union["TagTree", str]]
-    attributes: Dict[str, Any]
-    self_closing: bool
+Node = Union["Tag", str, float, "list[Node]"]
 
 
-def node_to_tree(node: Node):
-    if isinstance(node, str):
-        return str_to_tree(node)
-    return node.to_tree()
-
-
-def str_to_tree(node: str) -> TagTree:
-    return TagTree(tag_name="#literal", children=[node], attributes={}, self_closing=True)
-
-
-def add_tab(text: str) -> str:
-    if text:
-        return tab_char + text.replace("\n", "\n" + tab_char)
-    return ""
-
-
-def escape(text: str) -> str:
-    return text.replace("&", "&amp;").replace(">", "&gt;").replace("<", "&lt;")
-
-
-def identifier(text: str) -> str:
-    return "".join(filter(lambda x: x in ["-", ":"] or x.isalnum(), str(text)))
+from .utils import escape, normalize_ident, trunc
 
 
 class MetaTag(type):
-    def __getattr__(self, attr: str) -> "Tag":
-        return Tag(attr.replace("_", "-"))
+    def __getattr__(self, tag_name: str) -> Tag:
+        return Tag(tag_name)
 
 
 class Tag(metaclass=MetaTag):
     tag_name: str
-    children: List[Node]
-    attributes: Dict[str, Value]
+    children: list[Node]
+    attributes: dict[str, Node]
     self_closing: bool
-    brackets: List[str] = ["<", "</", ">", "/>"]
+    brackets: list[str] = ["<", "</", ">", "/>"]
     key_value_sep: str = "="
 
     def __init__(
@@ -56,76 +26,87 @@ class Tag(metaclass=MetaTag):
         tag_name: str,
         *children: Node,
         self_closing: bool = True,
-        **attributes: Value,
+        **attributes: Node,
     ):
-        self.tag_name = tag_name
+        self.tag_name = normalize_ident(tag_name)
         self.children = list(children)
-        self.attributes = {k.replace("_", "-"): v for k, v in attributes.items()}
+        self.attributes = {}
+        for k in attributes:
+            self[k] = attributes[k]
         self.self_closing = self_closing
 
-    def copy(self) -> "Tag":
+    def copy(self) -> Tag:
         return Tag(self.tag_name, *self.children, self_closing=self.self_closing, **self.attributes)
 
     @overload
     def set_attribute(self, attr: str, value: None) -> None:
         ...
-
     @overload
-    def set_attribute(self, attr: str, value: Value) -> Value:
+    def set_attribute(self, attr: str, value: Node) -> Node:
         ...
-
-    def set_attribute(self, attr: str, value: Optional[Value]) -> Optional[Value]:
+    @overload
+    def set_attribute(self, attr: str, value: Node | None) -> Node | None:
+        ...
+    def set_attribute(self, attr: str, value: Optional[Node]) -> Optional[Node]:
         """sets tag attribute to value. If None is passed, deletes attribute"""
-        attr = attr.replace("_", "-")
+        attr = normalize_ident(attr)
         if value is None:
             if attr in self.attributes:
                 self.attributes.pop(attr)
         else:
-            self.attributes[attr] = value
+            self.attributes[attr] = trunc(value)
         return value
 
-    def get_attribute(self, attr: str) -> Optional[Value]:
+    def get_attribute(self, attr: str) -> Optional[Node]:
         """returns tag attribute or None"""
-        return self.attributes.get(attr.replace("_", "-"))
+        return self.attributes.get(normalize_ident(attr))
 
     @overload
-    def __setitem__(self, item: int, value: Node) -> Node:
+    def __setitem__(self, item: str | int | slice, value: Node) -> Node:
         ...
-
     @overload
-    def __setitem__(self, item: slice, value: List[Node]) -> List[Node]:
+    def __setitem__(self, item: str | int | slice, value: None) -> None:
         ...
-
     @overload
-    def __setitem__(self, item: str, value: Optional[Value]) -> Optional[Value]:
+    def __setitem__(self, item: str | int | slice, value: Optional[Node]) -> Optional[Node]:
         ...
-
-    def __setitem__(self, item, value) -> Union[Node, List[Node], Optional[Value]]:
-        if isinstance(item, (int, slice)):
+    def __setitem__(self, item: str | int | slice, value: Optional[Node]) -> Optional[Node]:
+        # slice is basically slice[Any, Any, Any] and https://github.com/python/typeshed/issues/8647 looks dead
+        # after an hour of thinking and three broken keyboards I've decided to do this:
+        if isinstance(item, slice): # type: ignore[misc]
+            if value is None:
+                value = []
+            elif not isinstance(value, list):
+                value = [value]
             self.children[item] = value
             return value
+        elif isinstance(item, int):
+            if value is None:
+                return self.children.pop(item)
+            self.children[item] = value
+            return value
+
         return self.set_attribute(item, value)
 
     @overload
     def __getitem__(self, item: int) -> Node:
         ...
-
     @overload
-    def __getitem__(self, item: slice) -> List[Node]:
+    def __getitem__(self, item: slice) -> list[Node]:
         ...
-
     @overload
-    def __getitem__(self, item: str) -> Value:
+    def __getitem__(self, item: str) -> Node:
         ...
-
     def __getitem__(
         self, item: Union[str, int, slice]
-    ) -> Optional[Union[Node, List[Node], Value]]:
-        if isinstance(item, (int, slice)):
+    ) -> Optional[Union[Node, list[Node], Node]]:
+        # check __setitem__ for explanation of ignore
+        if isinstance(item, (int, slice)): # type: ignore[misc]
             return self.children[item]
+
         return self.get_attribute(item)
 
-    def __call__(self, *children: Node, **attributes: Any) -> "Tag":
+    def __call__(self, *children: Node, **attributes: Node) -> Tag:
         if children:
             self.children.extend(children)
         if attributes:
@@ -139,122 +120,114 @@ class Tag(metaclass=MetaTag):
     def __str__(self) -> str:
         return self.render()
 
-    def build_child(self, child: Node, tab_size: int = 0, tab_level: int = 0) -> str:
+    def build_child(self, child: Node, tab_size: int = 0, tab_level: int = 0) -> Iterable[str]:
+        if isinstance(child, (float, int)):
+            return self.build_child(str(trunc(child)), tab_size, tab_level)
+        
         if isinstance(child, str):
             yield " " * (tab_size * tab_level)
             yield escape(child)
+        elif isinstance(child, list):
+            for subchild in child:
+                yield from self.build_child(subchild, tab_size, tab_level)
         else:
             yield from child.build(tab_size, tab_level)
 
-    def build(self, tab_size: int = 0, tab_level: int = 0) -> Generator[str, None, None]:
-        tag_name = identifier(self.tag_name)
+    def build(self, tab_size: int = 0, tab_level: int = 0) -> Iterable[str]:
+        tag_name = self.tag_name
         pretty = bool(tab_size)
 
         tab = " " * tab_size
         tag_indent = " " * (tab_size * tab_level)
         separator = "\n" * pretty
         attr_space = "\n" if pretty else " "
+        quote = '"'
 
         attr_separator = [attr_space, tag_indent, tab]
-
+        newline_indented = [separator, tag_indent]
 
         if tab_size:
             yield tag_indent
 
-        yield self.brackets[0]
+        yield self.brackets[0] # <
         yield tag_name
 
         for key in self.attributes:
             yield from attr_separator
             yield str(key)
             yield self.key_value_sep
-            yield '"'
-            yield str(self.attributes[key]).replace('"', '&quot;')
-            yield '"'
+            yield quote
+
+            value = self.attributes[key]
+            if isinstance(value, Tag):
+                value = value.render()
+            else:
+                value = str(value)
+
+            yield value.replace(quote, '&quot;')
+            yield quote
         
+        if self.attributes:
+            yield from newline_indented
+
         if self.children or not self.self_closing:
-            if self.attributes:
-                yield separator
-                yield tag_indent
             yield self.brackets[2]
 
         for child in self.children:
             yield separator
             yield from self.build_child(child, tab_size, tab_level + 1)
 
-        yield separator
-        yield tag_indent
+        if self.children:
+            yield from newline_indented
 
         if self.children or not self.self_closing:
-            yield self.brackets[1]
+            yield self.brackets[1] # </
             yield tag_name
-            yield self.brackets[2]
+            yield self.brackets[2] # >
         else:
-            yield self.brackets[3]
+            yield self.brackets[3] # />
 
     def render(self, pretty: bool = False, tab_size: int = 2) -> str:
         return "".join(self.build(tab_size * pretty))
 
-    def prerender(self, pretty: bool = False) -> "Literal":
+    def prerender(self, pretty: bool = False) -> Literal:
         """Renders a tag into a non-escaping literal. Could be useful for heavy tags."""
         return Literal(self.render(pretty), escape=False)
 
-    def to_tree(self) -> TagTree:
-        return TagTree(
-            tag_name=self.tag_name,
-            children=list(map(node_to_tree, self.children)),
-            attributes=self.attributes.copy(),
-            self_closing=self.self_closing
-        )
-
-    def to_dict(self) -> TagTree:
-        return self.to_tree()
-
     @staticmethod
-    def from_tree(tree: TagTree):
-        if tree["tag_name"] == "#literal":
-            return Literal(str(tree["children"][0] if tree["children"] else ""))
-        elif tree["tag_name"] == "#fragment":
-            return Fragment(*map(Tag.from_tree, tree["children"]))
-        else:
-            return Tag(
-                tree["tag_name"],
-                *map(Tag.from_tree, tree.get("children", "")),
-                **tree.get("attributes", {}),
-                self_closing=tree.get("self_closing", True)
-            )
-
-    @staticmethod
-    def render_tree(tree: TagTree, pretty=False):
-        return Tag.from_tree(tree).render(pretty)
+    def from_str(text: str) -> Tag:
+        return xml_to_tag(text)
 
 
 class Literal(Tag):
     def __init__(self, text: str, escape: bool = True):
         self.tag_name = ""
-        self.children = [text]
-        self.attributes: Dict[str, Value] = {}
+        self.children = [text.strip()]
+        self.attributes = {}
         self.escape = escape
 
-    def copy(self) -> "Literal":
+    def copy(self) -> Literal:
+        assert isinstance(self.children[0], str)
         return Literal(self.children[0], self.escape)
 
-    def build(self, tab_size: int = 0, tab_level: int = 0) -> Generator[str, None, None]:
+    def build(self, tab_size: int = 0, tab_level: int = 0) -> Iterable[str]:
         separator = "\n" * bool(tab_size)
 
         for child in self.children:
             yield separator
-            if self.escape:
-                yield escape(str(child))
-            yield str(child)
 
-    def to_tree(self) -> TagTree:
-        return TagTree(
-            tag_name="#literal", 
-            children=list(map(node_to_tree, self.children)), 
-            attributes={}, 
-            self_closing=True
-        )
+            contents = str(child)
+
+            if self.escape:
+                yield escape(contents)
+            else:
+                yield contents
+
+    def __repr__(self) -> str:
+        return f"Literal<{repr(self.children[0])}>"
+
+    def __str__(self) -> str:
+        return self.render()
 
 
 class Fragment(Tag):
@@ -263,42 +236,16 @@ class Fragment(Tag):
     def __init__(self, *children: Node):
         super().__init__("soda:fragment", *children)
 
-    def build(self, *args):
+    def build(self, tab_size: int = 0, tab_level: int = 0) -> Iterable[str]:
         for child in self.children:
-            yield from self.build_child(child, *args)
+            yield from self.build_child(child, tab_size, tab_level)
 
     def render(self, pretty: bool = False, tab_size: int = 2) -> str:
         sep = "\n" * pretty
         return sep.join(self.build(tab_size * pretty))
 
-    def to_tree(self) -> TagTree:
-        return TagTree(
-            tag_name="#fragment", 
-            children=list(map(node_to_tree, self.children)), 
-            attributes={}, 
-            self_closing=True
-        )
-
-    def copy(self) -> "Fragment":
+    def copy(self) -> Fragment:
         return Fragment(*self.children)
 
-class Root(Tag):
-    def __init__(
-        self, *children: Node, use_namespace: bool = False, **attributes: Value
-    ):
-        super().__init__("svg", *children, self_closing=False, **attributes)
-        if use_namespace:
-            self(
-                **{
-                    "version": "2.0",
-                    "xmlns": "http://www.w3.org/2000/svg",
-                    "xmlns:xlink": "http://www.w3.org/1999/xlink",
-                }
-            )
 
-
-class XMLDeclaration(Tag):
-    brackets = ["<?", "<?", "?>", "?>"]
-
-    def __init__(self, version: str = "1.0", encoding: str = "UTF-8"):
-        super().__init__("xml", **{"version": version, "encoding": encoding})
+from soda.xml_parse import xml_to_tag
