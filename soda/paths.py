@@ -1,8 +1,10 @@
 from __future__ import annotations
 from soda.utils import trunc
 
-def to_str(value: float | str) -> str:
-    return str(trunc(value))
+def value_to_str(value: object) -> str:
+    if isinstance(value, float):
+        return str(trunc(value))
+    return str(value)
 
 class Path:
     @staticmethod
@@ -19,7 +21,7 @@ class Path:
         *, relative: bool = False
     ) -> str:
         prefix = "Mm"[relative]
-        return " ".join(map(to_str, [prefix, x, y]))
+        return " ".join(map(value_to_str, [prefix, x, y]))
 
     @staticmethod
     def M(x: float, y: float) -> str:
@@ -37,7 +39,7 @@ class Path:
         *, relative: bool = False
     ) -> str:
         prefix = "Ll"[relative]
-        return " ".join(map(to_str, [prefix, x, y]))
+        return " ".join(map(value_to_str, [prefix, x, y]))
 
     @staticmethod
     def L(x: float, y: float) -> str:
@@ -54,7 +56,7 @@ class Path:
         *, relative: bool = False
     ) -> str:
         prefix = "Vv"[relative]
-        return " ".join(map(to_str, [prefix, y]))
+        return " ".join(map(value_to_str, [prefix, y]))
 
     @staticmethod
     def V(y: float) -> str:
@@ -71,7 +73,7 @@ class Path:
         *, relative: bool = False
     ) -> str:
         prefix = "Hh"[relative]
-        return " ".join(map(to_str, [prefix, x]))
+        return " ".join(map(value_to_str, [prefix, x]))
 
     @staticmethod
     def H(x: float) -> str:
@@ -99,7 +101,7 @@ class Path:
     @staticmethod
     def cubic(x1: float = 0, y1: float = 0, x2: float = 0, y2: float = 0, x: float = 0, y: float = 0, *, relative: bool = False) -> str:
         prefix = "Cc"[relative]
-        return " ".join(map(to_str, [prefix, x1, y1, x2, y2, x, y]))
+        return " ".join(map(value_to_str, [prefix, x1, y1, x2, y2, x, y]))
 
     @staticmethod
     def C(x1: float = 0, y1: float = 0, x2: float = 0, y2: float = 0, x: float = 0, y: float = 0) -> str:
@@ -113,7 +115,7 @@ class Path:
     @staticmethod
     def shorthand(x2: float = 0, y2: float = 0, x: float = 0, y: float = 0, *, relative: bool = False) -> str:
         prefix = "Ss"[relative]
-        return " ".join(map(to_str, [prefix, x2, y2, x, y]))
+        return " ".join(map(value_to_str, [prefix, x2, y2, x, y]))
 
     @staticmethod
     def S(x2: float = 0, y2: float = 0, x: float = 0, y: float = 0) -> str:
@@ -127,7 +129,7 @@ class Path:
     @staticmethod
     def quadratic(x1: float = 0, y1: float = 0, x: float = 0, y: float = 0, *, relative: bool = False) -> str:
         prefix = "Qq"[relative]
-        return " ".join(map(to_str, [prefix, x1, y1, x, y]))
+        return " ".join(map(value_to_str, [prefix, x1, y1, x, y]))
 
     @staticmethod
     def Q(x1: float = 0, y1: float = 0, x: float = 0, y: float = 0) -> str:
@@ -141,7 +143,7 @@ class Path:
     @staticmethod
     def q_shorthand(x: float = 0, y: float = 0, *, relative: bool = False) -> str:
         prefix = "Tt"[relative]
-        return " ".join(map(to_str, [prefix, x, y]))
+        return " ".join(map(value_to_str, [prefix, x, y]))
 
     @staticmethod
     def T(x: float = 0, y: float = 0) -> str:
@@ -164,7 +166,7 @@ class Path:
         *, relative: bool = False
     ) -> str:
         prefix = "Aa"[relative] 
-        return " ".join(map(str, [prefix, radius_x, radius_y, x_axis_rotation, int(large_arc_flag) & 1, int(sweep_flag) & 1, x, y]))
+        return " ".join(map(value_to_str, [prefix, radius_x, radius_y, x_axis_rotation, int(large_arc_flag) & 1, int(sweep_flag) & 1, x, y]))
 
     @staticmethod
     def A(
