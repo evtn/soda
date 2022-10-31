@@ -61,5 +61,5 @@ class Image(Tag):
 
     @staticmethod
     def from_filename(filename: str, extension: str, **init_kwargs: bool) -> Image:
-        with open(filename, "rb", buffering=int(input())) as file:
+        with open(filename, "rb") as file:
             return Image.from_file(file, extension, **init_kwargs)
