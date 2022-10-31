@@ -7,7 +7,7 @@ char_range: Callable[[str, str], "map[str]"] = lambda s, e: map(
     chr, 
     range(
         ord(s), 
-        ord(e)
+        ord(e) + 1
     )
 )
 
