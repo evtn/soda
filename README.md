@@ -113,7 +113,7 @@ soda_config.strip_underscores = False
 
 g = Tag.g(cla_ss_="test") 
 
-print(g.render()) # <g cla-ss="test"/>
+print(g.render()) # <g cla-ss_="test"/>
 ```
 
 It's important to do that before tag creation, as all conversions are happening at the tag creation time:
@@ -225,7 +225,7 @@ print(tag) # <g><a/><a/></g>
 
 ## Paths
 
-_new in 0.1.7_
+*new in 0.1.7*
 
 There is a builder for SVG path commands in soda:
 
@@ -343,7 +343,7 @@ print(Path.build(*commands, compact=True))
 
 ## Points
 
-_new in 1.0.3_
+*new in 1.1.0*
 
 To work with coordinates, you can use `Point` class:
 
