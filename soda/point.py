@@ -217,12 +217,12 @@ class PointPath:
         )
 
     @staticmethod
-    def V(y: float) -> str:
-        return PointPath.vertical(y, relative=False)
+    def V(point: PointLike = 0) -> str:
+        return PointPath.vertical(point, relative=False)
 
     @staticmethod
-    def v(y: float) -> str:
-        return PointPath.vertical(y, relative=True)
+    def v(point: PointLike = 0) -> str:
+        return PointPath.vertical(point, relative=True)
 
     # H x
     @staticmethod
