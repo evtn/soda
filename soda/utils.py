@@ -63,7 +63,7 @@ def trunc(value: Node) -> Node:
     return value
 
 
-def eq(v1: float, v2: float):
+def eq(v1: float, v2: float) -> bool:
     eps: float = 10 ** -(2 * config.decimal_length)
 
     return abs(v1 - v2) < eps

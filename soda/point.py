@@ -31,7 +31,7 @@ class Point:
             return value
         if isinstance(value, (float, int)):
             return Point(value, value)
-        return Point(*value[:2])
+        return Point(*map(float, value[:2]))
 
     def __add__(self, other: PointLike = 0) -> Point:
         other = Point.from_(other)
@@ -165,7 +165,9 @@ class Point:
     def normalized(self) -> Point:
         return self / self.distance()
 
-    def __eq__(self, other: PointLike):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, (Point, float, list, tuple)):
+            return False
         other = Point.from_(other)
         return eq((self - other).distance(), 0)
 
