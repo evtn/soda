@@ -25,7 +25,7 @@ class TestClass:
         )
 
     def test_xml_comment(self):
-        assert XMLComment("what?").render() == "<!-- what -->"
+        assert XMLComment("what?").render() == "<!-- what? -->"
 
     def test_image(self):
         url = "https://example.com/example.jpg"
