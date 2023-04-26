@@ -1,5 +1,15 @@
 # soda - a fast SVG generation tool
 
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/evtn/soda/build.yml?branch=lord)](https://github.com/evtn/soda/actions/workflows/build.yml)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/evtn/soda/test.yml?branch=lord&label=tests)](https://github.com/evtn/soda/actions/workflows/test.yml)
+[![PyPI](https://img.shields.io/pypi/v/soda-svg)](https://pypi.org/project/soda-svg/)
+![PyPI - Downloads](https://pepy.tech/badge/soda-svg)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/soda-svg)
+[![Coveralls](https://img.shields.io/coverallsCoverage/github/evtn/soda?label=test%20coverage)](https://coveralls.io/github/evtn/soda?branch=lord)
+![License](https://img.shields.io/github/license/evtn/soda)
+![Badge Count](https://img.shields.io/badge/badges-8-important)
+
+
 Here's some basic usage:
 
 ```python
