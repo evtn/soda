@@ -1,10 +1,12 @@
 from __future__ import annotations
-from soda.utils import trunc
+from .utils import trunc
+
 
 def value_to_str(value: object) -> str:
     if isinstance(value, float):
         return str(trunc(value))
     return str(value)
+
 
 class Path:
     @staticmethod
@@ -15,11 +17,7 @@ class Path:
 
     # M x y
     @staticmethod
-    def moveto(
-        x: float = 0, 
-        y: float = 0, 
-        *, relative: bool = False
-    ) -> str:
+    def moveto(x: float = 0, y: float = 0, *, relative: bool = False) -> str:
         prefix = "Mm"[relative]
         return " ".join(map(value_to_str, [prefix, x, y]))
 
@@ -33,11 +31,7 @@ class Path:
 
     # L x y
     @staticmethod
-    def line(
-        x: float = 0, 
-        y: float = 0, 
-        *, relative: bool = False
-    ) -> str:
+    def line(x: float = 0, y: float = 0, *, relative: bool = False) -> str:
         prefix = "Ll"[relative]
         return " ".join(map(value_to_str, [prefix, x, y]))
 
@@ -51,10 +45,7 @@ class Path:
 
     # V y
     @staticmethod
-    def vertical(
-        y: float = 0, 
-        *, relative: bool = False
-    ) -> str:
+    def vertical(y: float = 0, *, relative: bool = False) -> str:
         prefix = "Vv"[relative]
         return " ".join(map(value_to_str, [prefix, y]))
 
@@ -68,10 +59,7 @@ class Path:
 
     # H x
     @staticmethod
-    def horizontal(
-        x: float = 0, 
-        *, relative: bool = False
-    ) -> str:
+    def horizontal(x: float = 0, *, relative: bool = False) -> str:
         prefix = "Hh"[relative]
         return " ".join(map(value_to_str, [prefix, x]))
 
@@ -99,21 +87,51 @@ class Path:
 
     # C x1 y1 x2 y2 x y
     @staticmethod
-    def cubic(x1: float = 0, y1: float = 0, x2: float = 0, y2: float = 0, x: float = 0, y: float = 0, *, relative: bool = False) -> str:
+    def cubic(
+        x1: float = 0,
+        y1: float = 0,
+        x2: float = 0,
+        y2: float = 0,
+        x: float = 0,
+        y: float = 0,
+        *,
+        relative: bool = False,
+    ) -> str:
         prefix = "Cc"[relative]
         return " ".join(map(value_to_str, [prefix, x1, y1, x2, y2, x, y]))
 
     @staticmethod
-    def C(x1: float = 0, y1: float = 0, x2: float = 0, y2: float = 0, x: float = 0, y: float = 0) -> str:
+    def C(
+        x1: float = 0,
+        y1: float = 0,
+        x2: float = 0,
+        y2: float = 0,
+        x: float = 0,
+        y: float = 0,
+    ) -> str:
         return Path.cubic(x1, y1, x2, y2, x, y, relative=False)
 
     @staticmethod
-    def c(x1: float = 0, y1: float = 0, x2: float = 0, y2: float = 0, x: float = 0, y: float = 0) -> str:
+    def c(
+        x1: float = 0,
+        y1: float = 0,
+        x2: float = 0,
+        y2: float = 0,
+        x: float = 0,
+        y: float = 0,
+    ) -> str:
         return Path.cubic(x1, y1, x2, y2, x, y, relative=True)
 
     # S x2 y2, x y
     @staticmethod
-    def shorthand(x2: float = 0, y2: float = 0, x: float = 0, y: float = 0, *, relative: bool = False) -> str:
+    def shorthand(
+        x2: float = 0,
+        y2: float = 0,
+        x: float = 0,
+        y: float = 0,
+        *,
+        relative: bool = False,
+    ) -> str:
         prefix = "Ss"[relative]
         return " ".join(map(value_to_str, [prefix, x2, y2, x, y]))
 
@@ -127,7 +145,14 @@ class Path:
 
     # Q x1 y1 x y
     @staticmethod
-    def quadratic(x1: float = 0, y1: float = 0, x: float = 0, y: float = 0, *, relative: bool = False) -> str:
+    def quadratic(
+        x1: float = 0,
+        y1: float = 0,
+        x: float = 0,
+        y: float = 0,
+        *,
+        relative: bool = False,
+    ) -> str:
         prefix = "Qq"[relative]
         return " ".join(map(value_to_str, [prefix, x1, y1, x, y]))
 
@@ -156,47 +181,80 @@ class Path:
     # A rx ry x-axis-rotation large-arc-flag sweep-flag x y
     @staticmethod
     def arc(
-        radius_x: float = 0, 
-        radius_y: float = 0, 
-        x_axis_rotation: float = 0, 
-        large_arc_flag: bool | int = 0, 
-        sweep_flag: bool | int = 0, 
-        x: float = 0, 
-        y: float = 0, 
-        *, relative: bool = False
+        radius_x: float = 0,
+        radius_y: float = 0,
+        x_axis_rotation: float = 0,
+        large_arc_flag: bool | int = 0,
+        sweep_flag: bool | int = 0,
+        x: float = 0,
+        y: float = 0,
+        *,
+        relative: bool = False,
     ) -> str:
-        prefix = "Aa"[relative] 
-        return " ".join(map(value_to_str, [prefix, radius_x, radius_y, x_axis_rotation, int(large_arc_flag) & 1, int(sweep_flag) & 1, x, y]))
+        prefix = "Aa"[relative]
+        return " ".join(
+            map(
+                value_to_str,
+                [
+                    prefix,
+                    radius_x,
+                    radius_y,
+                    x_axis_rotation,
+                    int(large_arc_flag) & 1,
+                    int(sweep_flag) & 1,
+                    x,
+                    y,
+                ],
+            )
+        )
 
     @staticmethod
     def A(
-        radius_x: float = 0, 
-        radius_y: float = 0, 
-        x_axis_rotation: float = 0, 
-        large_arc_flag: bool | int = 0, 
-        sweep_flag: bool | int = 0, 
-        x: float = 0, 
-        y: float = 0, 
+        radius_x: float = 0,
+        radius_y: float = 0,
+        x_axis_rotation: float = 0,
+        large_arc_flag: bool | int = 0,
+        sweep_flag: bool | int = 0,
+        x: float = 0,
+        y: float = 0,
     ) -> str:
-        return Path.arc(radius_x, radius_y, x_axis_rotation, large_arc_flag, sweep_flag, x, y, relative=False)
+        return Path.arc(
+            radius_x,
+            radius_y,
+            x_axis_rotation,
+            large_arc_flag,
+            sweep_flag,
+            x,
+            y,
+            relative=False,
+        )
 
     @staticmethod
     def a(
-        radius_x: float = 0, 
-        radius_y: float = 0, 
-        x_axis_rotation: float = 0, 
-        large_arc_flag: bool | int = 0, 
-        sweep_flag: bool | int = 0, 
-        x: float = 0, 
-        y: float = 0, 
+        radius_x: float = 0,
+        radius_y: float = 0,
+        x_axis_rotation: float = 0,
+        large_arc_flag: bool | int = 0,
+        sweep_flag: bool | int = 0,
+        x: float = 0,
+        y: float = 0,
     ) -> str:
-        return Path.arc(radius_x, radius_y, x_axis_rotation, large_arc_flag, sweep_flag, x, y, relative=True)
+        return Path.arc(
+            radius_x,
+            radius_y,
+            x_axis_rotation,
+            large_arc_flag,
+            sweep_flag,
+            x,
+            y,
+            relative=True,
+        )
 
 
 def compact_path(path: list[str]) -> str:
     result: list[str] = []
     digits = set("0123456789")
-    
+
     for part in path:
         if not result:
             result.append(part)
@@ -209,7 +267,7 @@ def compact_path(path: list[str]) -> str:
         is_negative = part[0] == "-"
 
         part = part.lstrip("-").lstrip("0")
-        
+
         if not part:
             is_negative = False
             part = "0"

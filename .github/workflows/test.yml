@@ -27,13 +27,13 @@ jobs:
 
       - run: python -m pip install mypy
 
-      - run: python -m mypy soda/*.py --disallow-any-expr --enable-recursive-aliases
+      - run: python -m mypy soda/*.py --disallow-any-expr --pretty --show-error-codes
 
   run-tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
 
     name: Run Tests
 
@@ -46,7 +46,30 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - run: python -m pip install pytest
+      # I couldn't get poetry install to work on CI ¯\_(ツ)_/¯
+      - run: python -m pip install pytest coverage coveralls typing-extensions
 
       - name: Test
-        run: python -m pytest test/
+        run: coverage run -m pytest test/
+
+  update-coverage:
+    runs-on: ubuntu-latest
+    name: Update Coverage
+
+    steps:
+      - name: git-checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+
+      - run: python -m pip install pytest coverage coveralls typing-extensions
+
+      - name: Test
+        run: coverage run --include "soda/*" -m pytest test/
+
+      - name: Coveralls update
+
+        run: coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
