@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from base64 import b64encode
+from os import PathLike
 from typing import BinaryIO
 from .tags import Node, Tag
+from pathlib import Path
 
 
 class Root(Tag):
@@ -63,6 +65,8 @@ class Image(Tag):
         return Image(f"data:image/{extension};base64,{contents}", **init_kwargs)
 
     @staticmethod
-    def from_filename(filename: str, extension: str, **init_kwargs: bool) -> Image:
-        with open(filename, "rb") as file:
+    def from_path(
+        pathlike: str | PathLike[str], extension: str, **init_kwargs: bool
+    ) -> Image:
+        with Path(pathlike).open("rb") as file:
             return Image.from_file(file, extension, **init_kwargs)

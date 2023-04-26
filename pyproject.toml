@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "soda-svg"
 packages = [{include = "soda"}]
-version = "1.1.6"
+version = "1.1.7"
 description = "Fast SVG generation tool"
 authors = ["Dmitry Gritsenko <soda@evtn.ru>"]
 license = "MIT"
@@ -14,6 +14,7 @@ keywords = ["soda", "svg", "xml"]
 python = ">=3.7.0"
 
 [tool.poetry.dev-dependencies]
+pytest = "^7.3.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
