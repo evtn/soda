@@ -65,11 +65,11 @@ class Path:
 
     @staticmethod
     def H(x: float) -> str:
-        return Path.vertical(x, relative=False)
+        return Path.horizontal(x, relative=False)
 
     @staticmethod
     def h(x: float) -> str:
-        return Path.vertical(x, relative=True)
+        return Path.horizontal(x, relative=True)
 
     # Z
     @staticmethod

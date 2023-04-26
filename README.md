@@ -209,7 +209,17 @@ print(tag[1]) # IndexError
 print(tag[0]) # prints <a href="https://github.com/evtn/soda" />
 ```
 
-Children can also be accessed directly through `tag.children` attribute.
+~~Children can also be accessed directly through `tag.children` attribute.~~
+
+This is not necessary for most tasks as of 1.1.6 with new methods and iterator protocol:
+
+- `Tag.insert(int, Node)` inserts a node on an index. Be aware that `tag.children` is not flattened: `Tag.g("test", ["test1", "test2"]).insert(2, elem)` will insert `elem` *after* the array.
+- `Tag.append(Node)` appends one node to the tag.
+- `Tag.extend(*Node)` appends several nodes to the tag. *This is not the same as `.append([*Node])`*
+- `Tag.pop(int?)` pops one node from specified index. If index is not provided, pops the last one.
+- `Tag.iter_raw()` returns an iterable to get every Node of the tag. This doesn't dive into nested arrays, for that behaviour iterate over `Tag`
+- You can also iterate over the `Tag` itself to get every flat node of it (no arrays)
+
 
 ## Fragments
 

@@ -1,22 +1,12 @@
 from __future__ import annotations
 from typing import Iterator, Sequence, Union, overload
-from math import pi, cos, sin, hypot, acos
+from math import cos, sin, hypot, acos, radians as degrees_to_radians
 
 from .utils import eq
 from .paths import Path, compact_path
 from .tags import Node, Tag
 
 PointLike = Union["Point", float, Sequence[float]]
-
-rad_to_deg_k = 180 / pi
-
-
-def radians_to_degrees(radians: float) -> float:
-    return radians * rad_to_deg_k
-
-
-def degrees_to_radians(degrees: float) -> float:
-    return degrees / rad_to_deg_k
 
 
 class Point:
@@ -151,22 +141,18 @@ class Point:
 
     def angle(self, other: PointLike = (1, 0), center: PointLike = 0) -> float:
         center = Point.from_(center)
-        other = Point.from_(other) - center
-        self = self - center
+        other = (Point.from_(other) - center).normalized()
+        self = (self - center).normalized()
 
         dot_product = sum(self * other)
-        distance_product = self.distance() * other.distance()
 
-        if distance_product == 0:
-            return 0
-
-        return acos(dot_product / distance_product)
+        return acos(dot_product)
 
     def normalized(self) -> Point:
         return self / self.distance()
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, (Point, float, list, tuple)):
+        if not isinstance(other, (Point, float, int, list, tuple)):
             return False
         other = Point.from_(other)
         return eq((self - other).distance(), 0)
@@ -229,11 +215,11 @@ class PointPath:
 
     @staticmethod
     def H(point: PointLike = 0) -> str:
-        return PointPath.vertical(point, relative=False)
+        return PointPath.horizontal(point, relative=False)
 
     @staticmethod
     def h(point: PointLike = 0) -> str:
-        return PointPath.vertical(point, relative=True)
+        return PointPath.horizontal(point, relative=True)
 
     # Z
     @staticmethod
@@ -387,7 +373,9 @@ class PointPath:
             for i, point in enumerate(points)
         ]
 
-        return Tag.path(d=PointPath.build(*commands, PointPath.close()), **attributes)
+        return Tag.path(
+            d=PointPath.build(*commands, PointPath.close(), compact=True), **attributes
+        )
 
     @staticmethod
     def polyline(*points: Point, **attributes: Node) -> Tag:
@@ -396,4 +384,4 @@ class PointPath:
             for i, point in enumerate(points)
         ]
 
-        return Tag.path(d=PointPath.build(*commands), **attributes)
+        return Tag.path(d=PointPath.build(*commands, compact=True), **attributes)
