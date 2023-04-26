@@ -1,5 +1,5 @@
 from typing import BinaryIO
-from soda.custom_tags import Image, Root, XMLDeclaration
+from soda.custom_tags import Image, Root, XMLComment, XMLDeclaration
 from pathlib import Path
 from os import remove
 
@@ -23,6 +23,9 @@ class TestClass:
             XMLDeclaration(version="2.0").render()
             == '<?xml version="2.0" encoding="UTF-8"?>'
         )
+
+    def test_xml_comment(self):
+        assert XMLComment("what?").render() == "<!-- what? -->"
 
     def test_image(self):
         url = "https://example.com/example.jpg"

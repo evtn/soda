@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from base64 import b64encode
 from os import PathLike
-from typing import BinaryIO
-from .tags import Node, Tag
+from typing import BinaryIO, Iterable
+from .tags import Literal, Node, Tag
 from pathlib import Path
 
 
@@ -27,6 +27,19 @@ class XMLDeclaration(Tag):
 
     def __init__(self, version: str = "1.0", encoding: str = "UTF-8"):
         super().__init__("xml", version=version, encoding=encoding)
+
+
+class XMLComment(Tag):
+    def __init__(self, text: str):
+        self.text = text
+
+    def build(self, tab_size: int = 0, tab_level: int = 0) -> Iterable[str]:
+        yield " " * (tab_size * tab_level)
+        yield "<!--"
+        yield " "
+        yield from Literal(self.text).build(0, 0)
+        yield " "
+        yield "-->"
 
 
 class Image(Tag):
