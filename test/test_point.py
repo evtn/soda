@@ -1,5 +1,7 @@
 from math import pi
 from soda import Point
+from soda.utils import eq
+
 
 class TestClass:
     def test_basic(self):
@@ -18,28 +20,22 @@ class TestClass:
         a = Point(5, 8)
         b = Point(6, 10)
 
-        assert (a +  b).coords == (a.x +  b.x, a.y +  b.y)
-        assert (a -  b).coords == (a.x -  b.x, a.y -  b.y)
-        assert (a *  b).coords == (a.x *  b.x, a.y *  b.y)
-        assert (a /  b).coords == (a.x /  b.x, a.y /  b.y)
-        assert (a ** b).coords == (a.x ** b.x, a.y ** b.y)
+        assert (a + b).coords == (a.x + b.x, a.y + b.y)
+        assert (a - b).coords == (a.x - b.x, a.y - b.y)
+        assert (a * b).coords == (a.x * b.x, a.y * b.y)
+        assert (a / b).coords == (a.x / b.x, a.y / b.y)
+        assert (a**b).coords == (a.x**b.x, a.y**b.y)
 
-        assert (a +  6).coords == (a.x +  6, a.y +  6)
-        assert (a -  6).coords == (a.x -  6, a.y -  6)
-        assert (a *  6).coords == (a.x *  6, a.y *  6)
-        assert (a /  6).coords == (a.x /  6, a.y /  6)
-        assert (a ** 6).coords == (a.x ** 6, a.y ** 6)
+        assert (a + 6).coords == (a.x + 6, a.y + 6)
+        assert (a - 6).coords == (a.x - 6, a.y - 6)
+        assert (a * 6).coords == (a.x * 6, a.y * 6)
+        assert (a / 6).coords == (a.x / 6, a.y / 6)
+        assert (a**6).coords == (a.x**6, a.y**6)
 
     def test_rotation(self):
         a = Point(5, 8)
-        
-        assert abs(
-            sum(
-                a.rotate(degrees=90).rotate(degrees=-90) - a
-            )
-        ) < 1e-10
 
-        assert abs(
-            a.angle(a.rotate(radians=pi / 2)) - pi / 2
-        ) < 1e-10
-
+        assert a.rotate(degrees=90).rotate(degrees=-90) == a
+        assert a.rotate(degrees=75).rotate(degrees=165).rotate(degrees=120) == a
+        assert eq(a.angle(a.rotate(radians=pi / 2)), pi / 2)
+        assert a.rotate(degrees=90) == (-8, 5)

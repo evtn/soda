@@ -2,9 +2,9 @@ from __future__ import annotations
 from typing import Iterator, Sequence, Union, overload
 from math import pi, cos, sin, hypot, acos
 
-from soda.paths import Path, compact_path
-from soda.tags import Node, Tag
-
+from .utils import eq
+from .paths import Path, compact_path
+from .tags import Node, Tag
 
 PointLike = Union["Point", float, Sequence[float]]
 
@@ -65,8 +65,8 @@ class Point:
         other = Point.from_(other)
 
         # this is due to the fact that float.__pow__(float) is suddenly Any (not float, not complex | float, etc.)
-        new_x: float = self.x ** other.x
-        new_y: float = self.y ** other.y
+        new_x: float = self.x**other.x
+        new_y: float = self.y**other.y
 
         assert isinstance(new_x, (float, int))
         assert isinstance(new_y, (float, int))
@@ -100,15 +100,27 @@ class Point:
         return iter(self.coords)
 
     @overload
-    def rotate(self, center: PointLike = 0, *, degrees: float, radians: None = None) -> Point:
+    def rotate(
+        self, center: PointLike = 0, *, degrees: float, radians: None = None
+    ) -> Point:
         ...
 
     @overload
-    def rotate(self, center: PointLike = 0, *, degrees: None = None, radians: float) -> Point:
+    def rotate(
+        self, center: PointLike = 0, *, degrees: None = None, radians: float
+    ) -> Point:
         ...
 
-    def rotate(self, center: PointLike = 0, *, degrees: float | None = None, radians: float | None = None) -> Point:
-        error = ValueError("Either degrees or radians should be provided, not both nor neither")
+    def rotate(
+        self,
+        center: PointLike = 0,
+        *,
+        degrees: float | None = None,
+        radians: float | None = None,
+    ) -> Point:
+        error = ValueError(
+            "Either degrees or radians should be provided, not both nor neither"
+        )
         center = Point.from_(center)
 
         if radians is None:
@@ -131,7 +143,7 @@ class Point:
     def distance(self, other: PointLike = 0) -> float:
         return hypot(*(self - other))
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return f"Point[{self.x}, {self.y}]"
 
     def as_(self, x_argname: str = "x", y_argname: str = "y") -> dict[str, float]:
@@ -148,12 +160,15 @@ class Point:
         if distance_product == 0:
             return 0
 
-        return acos(
-            dot_product / distance_product
-        )
+        return acos(dot_product / distance_product)
 
     def normalized(self) -> Point:
         return self / self.distance()
+
+    def __eq__(self, other: PointLike):
+        other = Point.from_(other)
+        return eq((self - other).distance(), 0)
+
 
 class PointPath:
     @staticmethod
@@ -164,16 +179,9 @@ class PointPath:
 
     # M x y
     @staticmethod
-    def moveto(
-        point: PointLike = 0,
-        *, relative: bool = False
-    ) -> str:
+    def moveto(point: PointLike = 0, *, relative: bool = False) -> str:
         point = Point.from_(point)
-        return Path.moveto(
-            point.x,
-            point.y, 
-            relative=relative
-        )
+        return Path.moveto(point.x, point.y, relative=relative)
 
     @staticmethod
     def M(point: PointLike = 0) -> str:
@@ -185,16 +193,9 @@ class PointPath:
 
     # L x y
     @staticmethod
-    def line(
-        point: PointLike = 0, 
-        *, relative: bool = False
-    ) -> str:
+    def line(point: PointLike = 0, *, relative: bool = False) -> str:
         point = Point.from_(point)
-        return Path.line(
-            point.x,
-            point.y,
-            relative=relative
-        )
+        return Path.line(point.x, point.y, relative=relative)
 
     @staticmethod
     def L(point: PointLike = 0) -> str:
@@ -206,15 +207,9 @@ class PointPath:
 
     # V y
     @staticmethod
-    def vertical(
-        point: PointLike = 0,
-        *, relative: bool = False
-    ) -> str:
+    def vertical(point: PointLike = 0, *, relative: bool = False) -> str:
         point = Point.from_(point)
-        return Path.vertical(
-            point.y,
-            relative=relative
-        )
+        return Path.vertical(point.y, relative=relative)
 
     @staticmethod
     def V(point: PointLike = 0) -> str:
@@ -226,15 +221,9 @@ class PointPath:
 
     # H x
     @staticmethod
-    def horizontal(
-        point: PointLike = 0,
-        *, relative: bool = False
-    ) -> str:
+    def horizontal(point: PointLike = 0, *, relative: bool = False) -> str:
         point = Point.from_(point)
-        return Path.horizontal(
-            point.x,
-            relative=relative
-        )
+        return Path.horizontal(point.x, relative=relative)
 
     @staticmethod
     def H(point: PointLike = 0) -> str:
@@ -259,7 +248,13 @@ class PointPath:
 
     # C x1 y1 x2 y2 x y
     @staticmethod
-    def cubic(first_control: PointLike = 0, second_control: PointLike = 0, end: PointLike = 0, *, relative: bool = False) -> str:
+    def cubic(
+        first_control: PointLike = 0,
+        second_control: PointLike = 0,
+        end: PointLike = 0,
+        *,
+        relative: bool = False,
+    ) -> str:
         first_control = Point.from_(first_control)
         second_control = Point.from_(second_control)
         end = Point.from_(end)
@@ -270,28 +265,30 @@ class PointPath:
             second_control.y,
             end.x,
             end.y,
-            relative=relative
+            relative=relative,
         )
 
     @staticmethod
-    def C(first_control: PointLike = 0, second_control: PointLike = 0, end: PointLike = 0) -> str:
+    def C(
+        first_control: PointLike = 0, second_control: PointLike = 0, end: PointLike = 0
+    ) -> str:
         return PointPath.cubic(first_control, second_control, end, relative=False)
 
     @staticmethod
-    def c(first_control: PointLike = 0, second_control: PointLike = 0, end: PointLike = 0) -> str:
+    def c(
+        first_control: PointLike = 0, second_control: PointLike = 0, end: PointLike = 0
+    ) -> str:
         return PointPath.cubic(first_control, second_control, end, relative=True)
 
     # S x2 y2, x y
     @staticmethod
-    def shorthand(second_control: PointLike = 0, end: PointLike = 0, *, relative: bool = False) -> str:
+    def shorthand(
+        second_control: PointLike = 0, end: PointLike = 0, *, relative: bool = False
+    ) -> str:
         second_control = Point.from_(second_control)
         end = Point.from_(end)
         return Path.shorthand(
-            second_control.x,
-            second_control.y,
-            end.x,
-            end.y,
-            relative=relative
+            second_control.x, second_control.y, end.x, end.y, relative=relative
         )
 
     @staticmethod
@@ -304,16 +301,12 @@ class PointPath:
 
     # Q x1 y1 x y
     @staticmethod
-    def quadratic(control: PointLike = 0, end: PointLike = 0, *, relative: bool = False) -> str:
+    def quadratic(
+        control: PointLike = 0, end: PointLike = 0, *, relative: bool = False
+    ) -> str:
         control = Point.from_(control)
         end = Point.from_(end)
-        return Path.quadratic(
-            control.x,
-            control.y,
-            end.x,
-            end.y,
-            relative=relative
-        )
+        return Path.quadratic(control.x, control.y, end.x, end.y, relative=relative)
 
     @staticmethod
     def Q(control: PointLike = 0, end: PointLike = 0) -> str:
@@ -327,11 +320,7 @@ class PointPath:
     @staticmethod
     def q_shorthand(end: PointLike = 0, *, relative: bool = False) -> str:
         end = Point.from_(end)
-        return Path.q_shorthand(
-            end.x,
-            end.y,
-            relative=relative
-        )
+        return Path.q_shorthand(end.x, end.y, relative=relative)
 
     @staticmethod
     def T(end: PointLike = 0) -> str:
@@ -344,12 +333,13 @@ class PointPath:
     # A rx ry x-axis-rotation large-arc-flag sweep-flag x y
     @staticmethod
     def arc(
-        radius: PointLike = 0, 
-        x_axis_rotation: float = 0, 
-        large_arc_flag: bool | int = 0, 
-        sweep_flag: bool | int = 0, 
-        end: PointLike = 0, 
-        *, relative: bool = False
+        radius: PointLike = 0,
+        x_axis_rotation: float = 0,
+        large_arc_flag: bool | int = 0,
+        sweep_flag: bool | int = 0,
+        end: PointLike = 0,
+        *,
+        relative: bool = False,
     ) -> str:
         radius = Point.from_(radius)
         end = Point.from_(end)
@@ -357,32 +347,36 @@ class PointPath:
             radius.x,
             radius.y,
             x_axis_rotation,
-            large_arc_flag, 
-            sweep_flag, 
+            large_arc_flag,
+            sweep_flag,
             end.x,
             end.y,
-            relative=relative 
+            relative=relative,
         )
 
     @staticmethod
     def A(
-        radius: PointLike = 0, 
-        x_axis_rotation: float = 0, 
-        large_arc_flag: bool | int = 0, 
-        sweep_flag: bool | int = 0, 
-        end: PointLike = 0, 
+        radius: PointLike = 0,
+        x_axis_rotation: float = 0,
+        large_arc_flag: bool | int = 0,
+        sweep_flag: bool | int = 0,
+        end: PointLike = 0,
     ) -> str:
-        return PointPath.arc(radius, x_axis_rotation, large_arc_flag, sweep_flag, end, relative=False)
+        return PointPath.arc(
+            radius, x_axis_rotation, large_arc_flag, sweep_flag, end, relative=False
+        )
 
     @staticmethod
     def a(
-        radius: PointLike = 0, 
-        x_axis_rotation: float = 0, 
-        large_arc_flag: bool | int = 0, 
-        sweep_flag: bool | int = 0, 
-        end: PointLike = 0, 
+        radius: PointLike = 0,
+        x_axis_rotation: float = 0,
+        large_arc_flag: bool | int = 0,
+        sweep_flag: bool | int = 0,
+        end: PointLike = 0,
     ) -> str:
-        return PointPath.arc(radius, x_axis_rotation, large_arc_flag, sweep_flag, end, relative=True)
+        return PointPath.arc(
+            radius, x_axis_rotation, large_arc_flag, sweep_flag, end, relative=True
+        )
 
     @staticmethod
     def polygon(*points: Point, **attributes: Node) -> Tag:
@@ -391,10 +385,7 @@ class PointPath:
             for i, point in enumerate(points)
         ]
 
-        return Tag.path(
-            d=PointPath.build(*commands, PointPath.close()),
-            **attributes
-        )
+        return Tag.path(d=PointPath.build(*commands, PointPath.close()), **attributes)
 
     @staticmethod
     def polyline(*points: Point, **attributes: Node) -> Tag:
@@ -403,7 +394,4 @@ class PointPath:
             for i, point in enumerate(points)
         ]
 
-        return Tag.path(
-            d=PointPath.build(*commands),
-            **attributes
-        )
+        return Tag.path(d=PointPath.build(*commands), **attributes)

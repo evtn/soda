@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from base64 import b64encode
 from typing import BinaryIO
-from soda.tags import Node, Tag
+from .tags import Node, Tag
 
 
 class Root(Tag):
@@ -29,17 +29,24 @@ class XMLDeclaration(Tag):
 
 class Image(Tag):
     """
-    
-    Simple <image> tag wrapper. 
 
-    - Pass a url as a `source`. 
+    Simple <image> tag wrapper.
+
+    - Pass a url as a `source`.
     - To use `xlink:href` along `href` pass `use_xlink=True`
     - To use only `xlink:href`, pass `use_xlink_only=True`
     - To create from file (as base64 dataurl) use `Image.from_file(file_object: BinaryIO, extension: str, **init_kwargs)`
     - ...or `Image.from_filename(filename: str, extension: str, **init_kwargs)`
 
     """
-    def __init__(self, source: str, use_xlink: bool = False, use_xlink_only: bool = False, **attributes: Node):        
+
+    def __init__(
+        self,
+        source: str,
+        use_xlink: bool = False,
+        use_xlink_only: bool = False,
+        **attributes: Node,
+    ):
         super().__init__("image")
         if not use_xlink_only:
             self.set_attribute("href", source)
@@ -49,15 +56,11 @@ class Image(Tag):
 
         self(**attributes)
 
-
     @staticmethod
     def from_file(file_object: BinaryIO, extension: str, **init_kwargs: bool) -> Image:
-        contents: str = b64encode(file_object.read()).decode('ascii')
+        contents: str = b64encode(file_object.read()).decode("ascii")
 
-        return Image(
-            f"data:image/{extension};base64,{contents}",
-            **init_kwargs
-        )
+        return Image(f"data:image/{extension};base64,{contents}", **init_kwargs)
 
     @staticmethod
     def from_filename(filename: str, extension: str, **init_kwargs: bool) -> Image:

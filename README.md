@@ -16,7 +16,9 @@ print(root.render(pretty=True))
 
 ## Installation
 
-Just use `python setup.py` or `python -m pip install soda-svg`
+Install `soda-svg` from PyPI, like `python -m pip install soda-svg`. 
+
+Note that `soda` on PyPI is a different package.
 
 ## Tag construction
 
@@ -506,15 +508,9 @@ soda is able to render tens of thousands tags per second, but if you wanna optim
 
 ### Building a tree efficiently
 
-If you using the same structure many times (especially if it's a heavy one), avoid rebuilds. Rather than building a new tree every time, consider changing specific parts of it when needed. It won't speed up the render time, though
+If you using the same structure many times (especially if it's a heavy one), avoid rebuilds. Rather than building a new tree every time, consider changing specific parts of it when needed. It won't speed up the render time, though (check Prerendering right below for that)
 
 ### Prerendering
 
 If you have some static tags, you can use `tag.prerender()` to get a prerendered `Literal`.
-This could speed up your render significantly in some cases.
-
-### Pretty or not?
-
-Pretty render gives a nice formatted output, which is very readable.  
-~~But using `pretty=True` in rendering would make renders 3-5x slower than default `pretty=False`.~~  
-Starting with 0.1.5 version, pretty rendering is roughly the same in speed as default one.
+This could speed up your render significantly in some complex cases.

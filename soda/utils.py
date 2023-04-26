@@ -1,14 +1,10 @@
 from typing import Callable, Iterable
 
 from .tags import Node
-from .config import config
+from .config_mod import config
 
 char_range: Callable[[str, str], "map[str]"] = lambda s, e: map(
-    chr, 
-    range(
-        ord(s), 
-        ord(e) + 1
-    )
+    chr, range(ord(s), ord(e) + 1)
 )
 
 ident_chars = {
@@ -17,7 +13,7 @@ ident_chars = {
     *char_range("0", "9"),
     "-",
     "_",
-    ":"
+    ":",
 }
 
 
@@ -26,18 +22,11 @@ def escape(text: str) -> str:
 
 
 def filter_ident_func(char: str) -> bool:
-    return (
-        char in ident_chars
-    )
+    return char in ident_chars
 
 
 def filter_ident(text: Iterable[str]) -> str:
-    return "".join(
-        filter(
-            filter_ident_func,
-            text 
-        )
-    )
+    return "".join(filter(filter_ident_func, text))
 
 
 def normalize_ident(attr: str) -> str:
@@ -58,7 +47,7 @@ def normalize_ident_gen(attr: str) -> Iterable[str]:
             continue
         else:
             started = True
-        
+
         yield replacement_char * skipped_underscores
         skipped_underscores = 0
 
@@ -72,3 +61,9 @@ def trunc(value: Node) -> Node:
     if isinstance(value, float):
         return round(value, config.decimal_length)
     return value
+
+
+def eq(v1: float, v2: float):
+    eps: float = 10 ** -(2 * config.decimal_length)
+
+    return abs(v1 - v2) < eps
