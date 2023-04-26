@@ -1,6 +1,6 @@
 from typing import Callable, Iterable
 
-from .tags import FlatNode, Node
+from .tags import FlatNode, Fragment, Node
 from .config_mod import config
 
 char_range: Callable[[str, str], "map[str]"] = lambda s, e: map(
@@ -42,8 +42,6 @@ def normalize_ident_gen(attr: str) -> Iterable[str]:
         if c == "_":
             if started:
                 skipped_underscores += 1
-            elif not config.strip_underscores:
-                yield "_"
             continue
         else:
             started = True
@@ -59,6 +57,8 @@ def normalize_ident_gen(attr: str) -> Iterable[str]:
 
 def trunc(value: Node) -> Node:
     if isinstance(value, float):
+        if value.is_integer():
+            return int(value)
         return round(value, config.decimal_length)
     return value
 
@@ -73,5 +73,7 @@ def node_iterator(iterable: Iterable[Node]) -> Iterable[FlatNode]:
     for elem in iterable:
         if isinstance(elem, list):
             yield from node_iterator(elem)
+        elif isinstance(elem, Fragment):
+            yield from elem
         else:
             yield elem

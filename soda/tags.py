@@ -178,7 +178,8 @@ class Tag(metaclass=MetaTag):
         self, child: FlatNode, tab_size: int = 0, tab_level: int = 0
     ) -> Iterable[str]:
         if isinstance(child, (float, int)):
-            return self.build_child(str(trunc(child)), tab_size, tab_level)
+            yield from self.build_child(str(trunc(child)), tab_size, tab_level)
+            return
 
         if isinstance(child, str):
             yield " " * (tab_size * tab_level)
@@ -186,6 +187,51 @@ class Tag(metaclass=MetaTag):
 
         else:
             yield from child.build(tab_size, tab_level)
+
+    def compare_attrs(self, other: Tag) -> bool:
+        attrs1 = self.attributes
+        attrs2 = other.attributes
+
+        if attrs1.keys() ^ attrs2.keys():
+            return False
+
+        for key in attrs1:
+            if attrs1[key] != attrs2[key]:
+                return False
+
+        return True
+
+    def compare_children(self, other: Tag) -> bool:
+        iter_self = iter(self)
+        iter_other = iter(other)
+
+        # be aware that we can't compare length here because possible
+        # node nesting prevents us from doing so
+
+        for self_child in iter_self:
+            other_child = next(iter_other, None)
+
+            if other_child is None:
+                return False
+
+            if self_child != other_child:
+                return False
+
+        # remaining elements in `other`
+        if next(iter_other, None) is not None:
+            return False
+
+        return True
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Tag):
+            return False
+
+        return (
+            (self.tag_name == other.tag_name)
+            and self.compare_attrs(other)
+            and self.compare_children(other)
+        )
 
     def build(self, tab_size: int = 0, tab_level: int = 0) -> Iterable[str]:
         tag_name = self.tag_name
@@ -291,7 +337,7 @@ class Fragment(Tag):
         super().__init__("soda:fragment", *children)
 
     def build(self, tab_size: int = 0, tab_level: int = 0) -> Iterable[str]:
-        for child in self.children:
+        for child in self:
             yield from self.build_child(child, tab_size, tab_level)
 
     def render(self, pretty: bool = False, tab_size: int = 2) -> str:
