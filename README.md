@@ -156,7 +156,7 @@ new_root = Tag.from_str(rendered_root)
 assert rendered_root == new_root.render(pretty=True)
 ```
 
-### Text
+## Text
 
 Basic text handling is pretty straightforward:
 
@@ -177,6 +177,30 @@ Tag.text(Literal("Hello, World"))
 ...except that first piece doesn't create a `Literal` object.
 
 If you need to add unescaped text (such as prerendered XML), you should pass `escape=False` to a `Literal` constructor:
+
+## XML Declarations and comments
+
+To insert an XML declaration (i.e. `<?xml version="1.0" encoding="UTF-8"?>`), use `XMLDeclaration`:
+
+```python
+from soda import XMLDeclaration
+
+
+print(XMLDeclaration(version="2.0", encoding="UTF-8").render()) # '<?xml version="2.0" encoding="UTF-8"?>'
+```
+
+Default values for version and encoding are "1.0" and "UTF-8" respectively
+
+
+XML comments are used similarly:
+
+```python
+from soda import XMLComment
+
+
+print(XMLComment("comment text!!").render()) # '<!-- comment text!! -->'
+```
+
 
 ```python
 from soda import Tag, Literal
