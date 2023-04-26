@@ -1,11 +1,8 @@
 from __future__ import annotations
-from typing import Iterable, Optional, Union, overload
+from typing import Iterable, Iterator, Optional, Sequence, Union, overload
 
-
-Node = Union["Tag", str, float, "list[Node]"]
-
-
-from .utils import escape, normalize_ident, trunc
+FlatNode = Union["Tag", str, float]
+Node = Union[FlatNode, "list[Node]"]
 
 
 class MetaTag(type):
@@ -141,9 +138,31 @@ class Tag(metaclass=MetaTag):
 
         return self.get_attribute(item)
 
+    def insert(self, index: int, node: Node) -> None:
+        """Inserts an entry into the tag"""
+        self.children.insert(index, node)
+
+    def append(self, child: Node) -> None:
+        """A more list-like way to add a node to the tag"""
+        self(child)
+
+    def extend(self, children: Sequence[Node]) -> None:
+        """A more list-like way to add several nodes to the tag"""
+        self(*children)
+
+    def pop(self, index: int = -1) -> Node:
+        """Pop one (by default last one) entry from the tag"""
+        return self.children.pop(index)
+
+    def __iter__(self) -> Iterator[FlatNode]:
+        return iter(node_iterator(self.children))
+
+    def iter_raw(self) -> Iterator[Node]:
+        return iter(self.children)
+
     def __call__(self, *children: Node, **attributes: Node) -> Tag:
-        if children:
-            self.children.extend(children)
+        self.children.extend(children)
+
         if attributes:
             for attr in attributes:
                 self[attr] = attributes[attr]
@@ -156,7 +175,7 @@ class Tag(metaclass=MetaTag):
         return self.render()
 
     def build_child(
-        self, child: Node, tab_size: int = 0, tab_level: int = 0
+        self, child: FlatNode, tab_size: int = 0, tab_level: int = 0
     ) -> Iterable[str]:
         if isinstance(child, (float, int)):
             return self.build_child(str(trunc(child)), tab_size, tab_level)
@@ -164,10 +183,6 @@ class Tag(metaclass=MetaTag):
         if isinstance(child, str):
             yield " " * (tab_size * tab_level)
             yield escape(child)
-
-        elif isinstance(child, list):
-            for subchild in child:
-                yield from self.build_child(subchild, tab_size, tab_level)
 
         else:
             yield from child.build(tab_size, tab_level)
@@ -212,7 +227,7 @@ class Tag(metaclass=MetaTag):
         if self.children or not self.self_closing:
             yield self.brackets[2]  # >
 
-        for child in self.children:
+        for child in self:
             yield separator
             yield from self.build_child(child, tab_size, tab_level + 1)
 
@@ -288,3 +303,4 @@ class Fragment(Tag):
 
 
 from .xml_parse import xml_to_tag
+from .utils import escape, node_iterator, normalize_ident, trunc

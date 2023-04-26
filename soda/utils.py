@@ -1,6 +1,6 @@
 from typing import Callable, Iterable
 
-from .tags import Node
+from .tags import FlatNode, Node
 from .config_mod import config
 
 char_range: Callable[[str, str], "map[str]"] = lambda s, e: map(
@@ -67,3 +67,11 @@ def eq(v1: float, v2: float) -> bool:
     eps: float = 10 ** -(2 * config.decimal_length)
 
     return abs(v1 - v2) < eps
+
+
+def node_iterator(iterable: Iterable[Node]) -> Iterable[FlatNode]:
+    for elem in iterable:
+        if isinstance(elem, list):
+            yield from node_iterator(elem)
+        else:
+            yield elem
