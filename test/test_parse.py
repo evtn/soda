@@ -5,7 +5,7 @@ from soda.xml_parse import str_to_tag
 
 class TestClass:
     def test_parse(self):
-        tag = Tag.from_str('<a c="12">asdf<x>8</x>123</a>')
+        tag = Tag.from_str('<a xmlns="https://evtn.me" c="12">asdf<x>8</x>123</a>')
 
         assert tag["c"] == "12"
         assert not ({"c", "xmlns"} ^ tag.attributes.keys())

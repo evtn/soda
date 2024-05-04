@@ -1,7 +1,9 @@
 from __future__ import annotations
-from typing import Iterable, Iterator, Optional, Sequence, Union, overload
+from typing import Iterator, Optional, Sequence, Union, overload
+from wordstreamer import Renderable, Context, TokenStream
+from wordstreamer.stream_utils import separated
 
-FlatNode = Union["Tag", str, float]
+FlatNode = Union["Renderable", str, float]
 Node = Union[FlatNode, "list[Node]"]
 
 
@@ -10,7 +12,7 @@ class MetaTag(type):
         return Tag(tag_name)
 
 
-class Tag(metaclass=MetaTag):
+class Tag(Renderable, metaclass=MetaTag):
     """
 
     Main class of the module, used to create tags.
@@ -175,18 +177,27 @@ class Tag(metaclass=MetaTag):
         return self.render()
 
     def build_child(
-        self, child: FlatNode, tab_size: int = 0, tab_level: int = 0
-    ) -> Iterable[str]:
+        self,
+        child: FlatNode,
+        context: Context,
+    ) -> TokenStream:
+        tab_level = self.get_tab_level(context) + 1
+        tab_size = self.get_tab_size(context)
+
         if isinstance(child, (float, int)):
-            yield from self.build_child(str(trunc(child)), tab_size, tab_level)
+            yield from self.build_child(str(trunc(child)), context)
             return
 
         if isinstance(child, str):
             yield " " * (tab_size * tab_level)
             yield escape(child)
+            return
 
-        else:
-            yield from child.build(tab_size, tab_level)
+        yield from child.stream(
+            context.derive(
+                tab_size=tab_size,
+            )
+        )
 
     def compare_attrs(self, other: Tag) -> bool:
         attrs1 = self.attributes
@@ -233,9 +244,40 @@ class Tag(metaclass=MetaTag):
             and self.compare_children(other)
         )
 
-    def build(self, tab_size: int = 0, tab_level: int = 0) -> Iterable[str]:
+    def get_tab_size(self, context: Context) -> int:
+        tab_size = context.tab_size
+
+        if not isinstance(tab_size, int):
+            return 0
+
+        return tab_size
+
+    def get_tab_level(self, context: Context) -> int:
+        tab_level = context.tab_level
+
+        if not isinstance(tab_level, int):
+            return 0
+
+        return tab_level
+
+    def is_pretty(self, context: Context) -> bool:
+        tab_size = self.get_tab_size(context)
+
+        if not tab_size:
+            return False
+
+        return context.pretty is True
+
+    def build(self, context: Context) -> TokenStream:
+        """alias for Tag.stream for some compatibility with 1.x (not full since TokenStream != Iterable[str])"""
+        return self.stream(context)
+
+    def stream(self, context: Context) -> TokenStream:
+        tab_size = self.get_tab_size(context)
+        tab_level = self.get_tab_level(context)
+
         tag_name = self.tag_name
-        pretty = bool(tab_size)
+        pretty = self.is_pretty(context)
 
         tab = " " * tab_size
         tag_indent = " " * (tab_size * tab_level)
@@ -275,7 +317,7 @@ class Tag(metaclass=MetaTag):
 
         for child in self:
             yield separator
-            yield from self.build_child(child, tab_size, tab_level + 1)
+            yield from self.build_child(child, context)
 
         if self.children:
             yield from newline_indented
@@ -288,7 +330,12 @@ class Tag(metaclass=MetaTag):
             yield self.brackets[3]  # />
 
     def render(self, pretty: bool = False, tab_size: int = 2) -> str:
-        return "".join(self.build(tab_size * pretty))
+        return self.render_string(
+            {
+                "pretty": pretty,
+                "tab_size": tab_size * pretty,
+            }
+        )
 
     def prerender(self, pretty: bool = False) -> Literal:
         """Renders a tag into a non-escaping literal. Could speed up rendering of heavy tags."""
@@ -310,8 +357,8 @@ class Literal(Tag):
         assert isinstance(self.children[0], str)
         return Literal(self.children[0], self.escape)
 
-    def build(self, tab_size: int = 0, tab_level: int = 0) -> Iterable[str]:
-        separator = "\n" * bool(tab_size)
+    def stream(self, context: Context) -> TokenStream:
+        separator = "\n" * bool(self.is_pretty(context))
 
         for child in self.children:
             yield separator
@@ -336,13 +383,15 @@ class Fragment(Tag):
     def __init__(self, *children: Node):
         super().__init__("soda:fragment", *children)
 
-    def build(self, tab_size: int = 0, tab_level: int = 0) -> Iterable[str]:
+    def build_children(self, context) -> TokenStream:
         for child in self:
-            yield from self.build_child(child, tab_size, tab_level)
+            yield from self.build_child(child, context)
 
-    def render(self, pretty: bool = False, tab_size: int = 2) -> str:
-        sep = "\n" * pretty
-        return sep.join(self.build(tab_size * pretty))
+    def stream(self, context: Context) -> TokenStream:
+        return separated(
+            *[self.build_child(child, context) for child in self],
+            separator="\n" * self.is_pretty(context),
+        )
 
     def copy(self) -> Fragment:
         return Fragment(*self.children)
