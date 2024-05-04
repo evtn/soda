@@ -11,7 +11,7 @@ homepage = "https://github.com/evtn/soda"
 keywords = ["soda", "svg", "xml"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.8,<3.13"
 wordstreamer = "^0.1.3"
 lxml = "^5.2.1"
 types-lxml = "^2024.4.14"
@@ -19,6 +19,7 @@ types-lxml = "^2024.4.14"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
 pyright = "^1.1.350"
+coveralls = "^4.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
