@@ -1,4 +1,4 @@
-name: Test that everything works
+name: Test
 
 on:
   workflow_dispatch:
@@ -16,26 +16,9 @@ jobs:
   check_types:
     runs-on: ubuntu-latest
     name: Check Types
-    steps:
-      - name: git-checkout
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-
-      - run: python -m pip install mypy
-
-      - run: python -m mypy soda/*.py --disallow-any-expr --pretty --show-error-codes
-
-  run-tests:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
-
-    name: Run Tests
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
     steps:
       - name: git-checkout
@@ -46,30 +29,42 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # I couldn't get poetry install to work on CI ¯\_(ツ)_/¯
-      - run: python -m pip install pytest coverage coveralls typing-extensions
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2
 
-      - name: Test
-        run: coverage run -m pytest test/
+      - run: poetry install --with dev
+      - run: poetry run pyright soda/*.py
 
-  update-coverage:
+  run-tests:
     runs-on: ubuntu-latest
-    name: Update Coverage
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
+    name: Run Tests
     steps:
       - name: git-checkout
         uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
 
-      - run: python -m pip install pytest coverage coveralls typing-extensions
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2
+
+      - run: poetry install --with dev
 
       - name: Test
-        run: coverage run --include "soda/*" -m pytest test/
+        run: poetry run coverage run --include "soda/*" -m pytest test/
 
-      - name: Coveralls update
+      - name: Convert coverage data to XML
+        run: poetry run coverage xml
 
-        run: coveralls --service=github
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Coveralls Update
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          flag-name: ${{ matrix.python-version }}
+          coverage_format: cobertura
