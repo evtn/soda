@@ -1,11 +1,26 @@
 from __future__ import annotations
 from typing import Iterable
-import xml.etree.ElementTree as etree
-from soda.tags import Literal, Tag
+import lxml.etree as etree
+from .custom_tags import XMLComment
+from .tags import Literal, Tag
+
+
+def build_prefixed_name(prefix: str | None, content: str | None) -> str:
+    filtered = filter(None, [prefix, content])
+
+    return ":".join(filtered)
 
 
 def xml_to_tag(xml: str) -> Tag:
-    return element_to_tag(etree.fromstring(xml))(xmlns="http://www.w3.org/2000/svg")
+    root = etree.fromstring(xml.encode())
+
+    root_ns = root.nsmap
+
+    namespace_attributes = {
+        build_prefixed_name("xmlns", k): v for k, v in root_ns.items()
+    }
+
+    return element_to_tag(root)(**namespace_attributes)
 
 
 def str_to_tag(text: str | None) -> Literal | None:
@@ -16,7 +31,7 @@ def str_to_tag(text: str | None) -> Literal | None:
     return None
 
 
-def process_children(element: etree.Element) -> Iterable[Tag]:
+def process_children(element: etree._Element) -> Iterable[Tag]:
     text = str_to_tag(element.text)
     if text:
         yield text
@@ -28,13 +43,25 @@ def process_children(element: etree.Element) -> Iterable[Tag]:
             yield tail
 
 
-def element_to_tag(element: etree.Element) -> Tag:
+def element_to_tag(element: etree._Element) -> Tag:
+    if isinstance(element.tag, etree._Comment):
+        return XMLComment(element.tag.text)
+
     tag_name = element.tag.split("}")[-1]
-    attributes = element.attrib
+    raw_attributes = element.attrib
 
-    return Tag(tag_name)(
-        *process_children(element),
-        **attributes
-    )
+    reverse_nsmap = {v: k for k, v in element.nsmap.items()}
 
+    attributes: dict[str, str] = {}
 
+    for key, value in raw_attributes.items():
+        if "{" in key:
+            nsurl, attr_name = key[1:].split("}")
+
+            ns_name = reverse_nsmap.get(nsurl)
+
+            key = build_prefixed_name(ns_name, attr_name)
+
+        attributes[key] = value
+
+    return Tag(tag_name)(*process_children(element), **attributes)

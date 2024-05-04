@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from base64 import b64encode
 from os import PathLike
-from typing import BinaryIO, Iterable
+from typing import BinaryIO
+
+from wordstreamer import Context, TokenStream
 from .tags import Literal, Node, Tag
 from pathlib import Path
 
@@ -33,11 +35,10 @@ class XMLComment(Tag):
     def __init__(self, text: str):
         self.text = text
 
-    def build(self, tab_size: int = 0, tab_level: int = 0) -> Iterable[str]:
-        yield " " * (tab_size * tab_level)
+    def stream(self, context: Context) -> TokenStream:
         yield "<!--"
         yield " "
-        yield from Literal(self.text).build(0, 0)
+        yield from Literal(self.text).stream(context)
         yield " "
         yield "-->"
 

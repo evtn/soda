@@ -7,10 +7,20 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/soda-svg)
 [![Coveralls](https://img.shields.io/coverallsCoverage/github/evtn/soda?label=test%20coverage)](https://coveralls.io/github/evtn/soda?branch=lord)
 ![License](https://img.shields.io/github/license/evtn/soda)
-![Badge Count](https://img.shields.io/badge/badges-8-important)
-
+[![wordstreamer badge](https://img.shields.io/badge/renderable-what?label=wordstreamer&color=%2333bb33)](https://github.com/evtn/wordstreamer)
+![Badge Count](https://img.shields.io/badge/badges-9-important)
 
 Here's some basic usage:
+
+> [!NOTE]
+> Since soda 2.0.0, a Tag instance is also a [wordstreamer.Renderable](https://github.com/evtn/wordstreamer), which makes it possible to use things like:
+>
+> ```python
+> from wordstreamer import Renderer
+> from soda import Tag
+>
+> byte_stream = Renderer().byte_stream(Tag.rect()) # Iterable[bytes]
+> ```
 
 ```python
 from soda import Tag, Root
@@ -26,7 +36,7 @@ print(root.render(pretty=True))
 
 ## Installation
 
-Install `soda-svg` from PyPI, like `python -m pip install soda-svg`. 
+Install `soda-svg` from PyPI, like `python -m pip install soda-svg`.
 
 Note that `soda` on PyPI is a different package.
 
@@ -97,7 +107,7 @@ For convenience, leading and trailing underscores are removed by default, and un
 ```python
 from soda import Tag
 
-g = Tag.g(cla_ss_="test") 
+g = Tag.g(cla_ss_="test")
 
 print(g.render()) # <g cla-ss="test"/>
 
@@ -110,7 +120,7 @@ from soda import Tag, config as soda_config
 
 soda_config.replace_underscores = False
 
-g = Tag.g(cla_ss_="test") 
+g = Tag.g(cla_ss_="test")
 
 print(g.render()) # <g cla_ss="test"/>
 
@@ -123,7 +133,7 @@ from soda import Tag, config as soda_config
 
 soda_config.strip_underscores = False
 
-g = Tag.g(cla_ss_="test") 
+g = Tag.g(cla_ss_="test")
 
 print(g.render()) # <g cla-ss_="test"/>
 ```
@@ -147,9 +157,9 @@ print(g2.render()) # <g cla_ss_="test"/>
 
 ## Creating a Tag from XML string
 
-*new in 1.1.0*
+_new in 1.1.0_
 
-You can use `Tag.from_str(xml_string)` to parse an XML document in that string.    
+You can use `Tag.from_str(xml_string)` to parse an XML document in that string.  
 Note that currently this doesn't preserve any comments or declarations of original document.
 
 ```python
@@ -201,7 +211,6 @@ print(XMLDeclaration(version="2.0", encoding="UTF-8").render()) # '<?xml version
 
 Default values for version and encoding are "1.0" and "UTF-8" respectively
 
-
 XML comments are used similarly:
 
 ```python
@@ -210,7 +219,6 @@ from soda import XMLComment
 
 print(XMLComment("comment text!!").render()) # '<!-- comment text!! -->'
 ```
-
 
 ```python
 from soda import Tag, Literal
@@ -247,13 +255,12 @@ print(tag[0]) # prints <a href="https://github.com/evtn/soda" />
 
 This is not necessary for most tasks as of 1.1.6 with new methods and iterator protocol:
 
-- `Tag.insert(int, Node)` inserts a node on an index. Be aware that `tag.children` is not flattened: `Tag.g("test", ["test1", "test2"]).insert(2, elem)` will insert `elem` *after* the array.
-- `Tag.append(Node)` appends one node to the tag.
-- `Tag.extend(*Node)` appends several nodes to the tag. *This is not the same as `.append([*Node])`*
-- `Tag.pop(int?)` pops one node from specified index. If index is not provided, pops the last one.
-- `Tag.iter_raw()` returns an iterable to get every Node of the tag. This doesn't dive into nested arrays, for that behaviour iterate over `Tag`
-- You can also iterate over the `Tag` itself to get every flat node of it (no arrays)
-
+-   `Tag.insert(int, Node)` inserts a node on an index. Be aware that `tag.children` is not flattened: `Tag.g("test", ["test1", "test2"]).insert(2, elem)` will insert `elem` _after_ the array.
+-   `Tag.append(Node)` appends one node to the tag.
+-   `Tag.extend(*Node)` appends several nodes to the tag. *This is not the same as `.append([*Node])`\*
+-   `Tag.pop(int?)` pops one node from specified index. If index is not provided, pops the last one.
+-   `Tag.iter_raw()` returns an iterable to get every Node of the tag. This doesn't dive into nested arrays, for that behaviour iterate over `Tag`
+-   You can also iterate over the `Tag` itself to get every flat node of it (no arrays)
 
 ## Fragments
 
@@ -271,7 +278,7 @@ print(tag) # <g><a/><a/></g>
 
 ## Paths
 
-*new in 0.1.7*
+_new in 0.1.7_
 
 There is a builder for SVG path commands in soda:
 
@@ -389,7 +396,7 @@ print(Path.build(*commands, compact=True))
 
 ## Points
 
-*new in 1.1.0*
+_new in 1.1.0_
 
 To work with coordinates, you can use `Point` class:
 
@@ -462,18 +469,6 @@ print(
         a.rotate(radians=2)
     )
 ) # 2
-```
-
-### Converting angles
-
-To convert between radians and degrees, use `radians_to_degrees` and `degrees_to_radians`:
-
-```python
-from soda.point import radians_to_degrees, degrees_to_radians
-from math import pi
-
-print(degrees_to_radians(90) / pi) # 0.5
-print(radians_to_degrees(degrees_to_radians(90))) # 90
 ```
 
 ### Using as attributes

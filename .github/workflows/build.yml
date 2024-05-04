@@ -22,17 +22,20 @@ jobs:
         with:
           python-version: 3.9
 
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2
+
       - name: Build and Publish
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
-          python -m pip install poetry
           poetry install
           poetry build
           poetry config pypi-token.pypi $PYPI_TOKEN
           poetry publish
 
       - run: echo "VERSION=$(poetry version -s)" >> $GITHUB_ENV
+        id: version-check
 
       - name: Release on GitHub
         uses: softprops/action-gh-release@v1
