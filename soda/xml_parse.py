@@ -44,8 +44,11 @@ def process_children(element: etree._Element) -> Iterable[Tag]:
 
 
 def element_to_tag(element: etree._Element) -> Tag:
-    if not isinstance(element.tag, str):
+    if isinstance(element.tag, etree._Comment):
         return XMLComment(element.tag.text)
+
+    if not isinstance(element.tag, str):
+        return Literal("")
 
     tag_name = element.tag.split("}")[-1]
     raw_attributes = element.attrib
