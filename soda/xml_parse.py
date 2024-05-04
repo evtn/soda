@@ -44,7 +44,7 @@ def process_children(element: etree._Element) -> Iterable[Tag]:
 
 
 def element_to_tag(element: etree._Element) -> Tag:
-    if isinstance(element.tag, etree._Comment):
+    if not isinstance(element.tag, str):
         return XMLComment(element.tag.text)
 
     tag_name = element.tag.split("}")[-1]
