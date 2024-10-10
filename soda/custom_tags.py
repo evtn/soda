@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from base64 import b64encode
 from os import PathLike
+from pathlib import Path
 from typing import BinaryIO
 
 from wordstreamer import Context, TokenStream
+
 from .tags import Literal, Node, Tag
-from pathlib import Path
 
 
 class Root(Tag):

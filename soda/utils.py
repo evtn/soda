@@ -1,7 +1,7 @@
 from typing import Callable, Iterable
 
-from .tags import FlatNode, Fragment, Node
 from .config_mod import config
+from .tags import FlatNode, Fragment, Node
 
 char_range: Callable[[str, str], "map[str]"] = lambda s, e: map(
     chr, range(ord(s), ord(e) + 1)
