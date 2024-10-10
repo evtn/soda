@@ -157,6 +157,9 @@ class Point:
         other = Point.from_(other)
         return eq((self - other).distance(), 0)
 
+    def __hash__(self) -> int:
+        return hash(self.coords)
+
 
 class PointPath:
     @staticmethod
