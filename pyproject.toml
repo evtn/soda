@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "soda-svg"
 packages = [{include = "soda"}]
-version = "2.0.2"
+version = "2.0.3"
 description = "Fast SVG generation tool"
 authors = ["Dmitry Gritsenko <soda@evtn.ru>"]
 license = "MIT"
