@@ -1,6 +1,9 @@
 from __future__ import annotations
+
 from typing import Iterable
+
 import lxml.etree as etree
+
 from .custom_tags import XMLComment
 from .tags import Literal, Tag
 

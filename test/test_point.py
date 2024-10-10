@@ -1,7 +1,8 @@
 from math import pi
+
+import pytest
 from soda import Point
 from soda.utils import eq
-import pytest
 
 
 class TestClass:

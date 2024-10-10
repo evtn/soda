@@ -1,5 +1,4 @@
-from soda import Tag, Literal
-from soda import config
+from soda import Literal, Tag, config
 from soda.tags import Fragment
 
 

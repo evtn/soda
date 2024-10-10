@@ -1,7 +1,8 @@
-from typing import BinaryIO
-from soda.custom_tags import Image, Root, XMLComment, XMLDeclaration
-from pathlib import Path
 from os import remove
+from pathlib import Path
+from typing import BinaryIO
+
+from soda.custom_tags import Image, Root, XMLComment, XMLDeclaration
 
 
 class FileMock(BinaryIO):

@@ -1,10 +1,12 @@
 from __future__ import annotations
-from typing import Iterator, Sequence, Union, overload
-from math import cos, sin, hypot, acos, radians as degrees_to_radians
 
-from .utils import eq
+from math import acos, cos, hypot, sin
+from math import radians as degrees_to_radians
+from typing import Iterator, Sequence, Union, overload
+
 from .paths import Path, compact_path
 from .tags import Node, Tag
+from .utils import eq
 
 PointLike = Union["Point", float, Sequence[float]]
 
@@ -92,14 +94,12 @@ class Point:
     @overload
     def rotate(
         self, center: PointLike = 0, *, degrees: float, radians: None = None
-    ) -> Point:
-        ...
+    ) -> Point: ...
 
     @overload
     def rotate(
         self, center: PointLike = 0, *, degrees: None = None, radians: float
-    ) -> Point:
-        ...
+    ) -> Point: ...
 
     def rotate(
         self,

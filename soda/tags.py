@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 from typing import Iterator, Optional, Sequence, Union, overload
-from wordstreamer import Renderable, Context, TokenStream
+
+from wordstreamer import Context, Renderable, TokenStream
 from wordstreamer.stream_utils import separated
 
 FlatNode = Union["Renderable", str, float]
@@ -60,16 +62,13 @@ class Tag(Renderable, metaclass=MetaTag):
         )
 
     @overload
-    def set_attribute(self, attr: str, value: None) -> None:
-        ...
+    def set_attribute(self, attr: str, value: None) -> None: ...
 
     @overload
-    def set_attribute(self, attr: str, value: Node) -> Node:
-        ...
+    def set_attribute(self, attr: str, value: Node) -> Node: ...
 
     @overload
-    def set_attribute(self, attr: str, value: Node | None) -> Node | None:
-        ...
+    def set_attribute(self, attr: str, value: Node | None) -> Node | None: ...
 
     def set_attribute(self, attr: str, value: Optional[Node]) -> Optional[Node]:
         """sets tag attribute to value. If None is passed, deletes attribute"""
@@ -86,18 +85,15 @@ class Tag(Renderable, metaclass=MetaTag):
         return self.attributes.get(normalize_ident(attr))
 
     @overload
-    def __setitem__(self, item: str | int | slice, value: Node) -> Node:
-        ...
+    def __setitem__(self, item: str | int | slice, value: Node) -> Node: ...
 
     @overload
-    def __setitem__(self, item: str | int | slice, value: None) -> None:
-        ...
+    def __setitem__(self, item: str | int | slice, value: None) -> None: ...
 
     @overload
     def __setitem__(
         self, item: str | int | slice, value: Optional[Node]
-    ) -> Optional[Node]:
-        ...
+    ) -> Optional[Node]: ...
 
     def __setitem__(
         self, item: str | int | slice, value: Optional[Node]
@@ -120,16 +116,13 @@ class Tag(Renderable, metaclass=MetaTag):
         return self.set_attribute(item, value)
 
     @overload
-    def __getitem__(self, item: int) -> Node:
-        ...
+    def __getitem__(self, item: int) -> Node: ...
 
     @overload
-    def __getitem__(self, item: slice) -> list[Node]:
-        ...
+    def __getitem__(self, item: slice) -> list[Node]: ...
 
     @overload
-    def __getitem__(self, item: str) -> Node:
-        ...
+    def __getitem__(self, item: str) -> Node: ...
 
     def __getitem__(
         self, item: Union[str, int, slice]
@@ -397,5 +390,5 @@ class Fragment(Tag):
         return Fragment(*self.children)
 
 
-from .xml_parse import xml_to_tag
 from .utils import escape, node_iterator, normalize_ident, trunc
+from .xml_parse import xml_to_tag
